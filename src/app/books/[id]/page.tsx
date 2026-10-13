@@ -4,8 +4,10 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { Cover } from "@/components/books/Cover";
 import { authorsLabel, spotLabel } from "@/lib/library/format";
-import { getEntry } from "@/lib/library/queries";
+import { getEntry, getNotes } from "@/lib/library/queries";
 import { MarkOpened } from "./MarkOpened";
+import { NotesByChapter } from "./NotesByChapter";
+import { QuickNoteBox } from "./QuickNoteBox";
 import { RemoveButton } from "./RemoveButton";
 import { ReviewForm } from "./ReviewForm";
 
@@ -28,7 +30,7 @@ export default function BookPage({ params }: PageProps<"/books/[id]">) {
 async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">) {
   const { id } = await params;
   // Row-level security means another reader's entry comes back as null, same as a missing one.
-  const entry = await getEntry(id);
+  const [entry, notes] = await Promise.all([getEntry(id), getNotes(id)]);
   if (!entry) notFound();
   const { book } = entry;
 
@@ -59,13 +61,11 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
         <BigButton title="Find my place" hint="By chapter, page, time…" />
       </div>
 
-      {/* 2. Notes by chapter, collapsed, with green dots. Filled in by steps 3 and 6. */}
-      <section className="mt-10">
+      {/* 2. Notes by chapter, collapsed, with green dots. */}
+      <section className="mt-10 space-y-4">
         <h2 className="font-serif text-lg font-semibold">Notes by chapter</h2>
-        <p className="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
-          Your chapters will appear here. Chapters you&apos;ve left notes in get a green dot, so you can see
-          where you&apos;ve been at a glance.
-        </p>
+        <QuickNoteBox entryId={entry.id} />
+        <NotesByChapter notes={notes} />
       </section>
 
       {/* 3. Final notes / rating, after the last chapter. */}

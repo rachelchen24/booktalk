@@ -1,4 +1,5 @@
 import "server-only";
+import type { Note } from "@/lib/library/notes";
 import { createClient } from "@/lib/supabase/server";
 
 export type Book = {
@@ -56,6 +57,19 @@ export async function getShelvedWorkKeys(): Promise<Map<string, string>> {
   if (error) throw error;
   const rows = data as unknown as { id: string; book: { ol_work_key: string } }[];
   return new Map(rows.map((row) => [row.book.ol_work_key, row.id]));
+}
+
+/** The reader's notes for one book. */
+export async function getNotes(entryId: string): Promise<Note[]> {
+  if (!isUuid(entryId)) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notes")
+    .select("id, chapter, body, created_at")
+    .eq("entry_id", entryId)
+    .order("created_at");
+  if (error) throw error;
+  return data as Note[];
 }
 
 export function isUuid(value: string): boolean {

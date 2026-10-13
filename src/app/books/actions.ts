@@ -1,11 +1,13 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getBook, getEdition } from "@/lib/books/catalog";
 import { normalizeIsbn } from "@/lib/books/isbn";
 import { isWorkKey } from "@/lib/books/open-library";
 import { MAX_FINAL_THOUGHTS } from "@/lib/library/format";
+import { MAX_CHAPTER, MAX_NOTE_LENGTH, parseChapter } from "@/lib/library/notes";
 import { isUuid } from "@/lib/library/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -117,6 +119,44 @@ export async function saveReview(_prev: ActionState, formData: FormData): Promis
     return { error: "We couldn't save that. Please try again." };
   }
   return { message: "Saved." };
+}
+
+export type NoteState = ActionState & { body?: string; chapter?: string };
+
+export async function addNote(_prev: NoteState, formData: FormData): Promise<NoteState> {
+  const entryId = String(formData.get("entryId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  const chapterInput = String(formData.get("chapter") ?? "");
+  const chapter = parseChapter(chapterInput);
+  // Echo the input back on errors, because React clears the form after every submit.
+  const keep = { body, chapter: chapterInput };
+
+  if (!isUuid(entryId)) return { error: "Something went wrong. Please reload the page." };
+  if (!body) return { error: "Write something first.", ...keep };
+  if (body.length > MAX_NOTE_LENGTH) {
+    return { error: `Notes can be up to ${MAX_NOTE_LENGTH.toLocaleString()} characters.`, ...keep };
+  }
+  if (chapter === undefined) return { error: `Chapter should be a number from 1 to ${MAX_CHAPTER}.`, ...keep };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("notes").insert({ entry_id: entryId, chapter, body });
+  if (error) {
+    console.error("addNote failed", error);
+    return { error: "We couldn't save that note. Please try again.", ...keep };
+  }
+
+  refresh();
+  // Keep the chapter filled in: the next note is usually from the same chapter.
+  return { message: "Note saved.", chapter: chapterInput };
+}
+
+export async function deleteNote(formData: FormData): Promise<void> {
+  const noteId = String(formData.get("noteId") ?? "");
+  if (!isUuid(noteId)) return;
+  const supabase = await createClient();
+  const { error } = await supabase.from("notes").delete().eq("id", noteId);
+  if (error) console.error("deleteNote failed", error);
+  refresh();
 }
 
 export async function removeBook(formData: FormData): Promise<void> {

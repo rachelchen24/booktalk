@@ -7,7 +7,7 @@ export function RemoveButton({ entryId, title }: { entryId: string; title: strin
     <form
       action={removeBook}
       onSubmit={(event) => {
-        if (!confirm(`Remove "${title}" from your library? Your rating and thoughts for it will be deleted.`)) {
+        if (!confirm(`Remove "${title}" from your library? Your notes, rating and thoughts for it will be deleted.`)) {
           event.preventDefault();
         }
       }}

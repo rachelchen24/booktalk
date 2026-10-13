@@ -223,10 +223,31 @@ and 8.
 
 ### Status
 - ✅ tsc, lint, 41 tests, and `next build` pass.
-- ⏳ Rachel needs to run `0002_library.sql` in the dashboard SQL Editor. Then run the
-  no-email RLS self-test (a scratchpad script: creates 2 confirmed users via the admin API,
-  checks catalog write-protection, shelf isolation, upsert dedupe, rating check, then cleans up),
-  then a manual UI test.
+- ✅ Migration 0002 applied by Rachel (2026-10-13). The no-email RLS self-test passed 13/13:
+  readers can't write `books` (42501); B can't see, edit, delete, or insert into A's shelf;
+  re-adding upserts instead of duplicating; the join works; a 9-star rating is rejected
+  (23514); cleanup works. (One real `books` row, Wicked / OL66218W, was left in the catalog
+  on purpose.)
+- ✅ Manual UI test by Rachel: search, add, covers, ordering, rating, and remove all look good.
+
+### Quick note box (added at Rachel's request, TEMPORARY)
+Rachel found it odd that the book page had no notes, so a basic note box was pulled forward
+from Step 6 (migration `0003_notes.sql`: `notes` table, chapter number optional for now).
+Files: `QuickNoteBox.tsx` (the temporary part), `NotesByChapter.tsx` (`<details>` per chapter,
+green dot, "No chapter yet" last), `DeleteNoteButton.tsx`, `addNote`/`deleteNote` in
+`books/actions.ts` (both call `refresh()` from next/cache), `getNotes` in queries,
+`lib/library/notes.ts` (`groupByChapter`, `parseChapter`, limits; tested). The insert/update
+RLS policies also check that the `entry_id` belongs to the reader. Known nit: note dates are
+formatted on the server (UTC), so they can be a day off for the reader.
+**Rachel's instruction: remove the quick note box once the expandable notes-by-chapter (Step 3)
+are working.** Notes then get added from inside each chapter, and the "No chapter yet"
+notes need a way to be given a chapter.
+
+## Interview notes
+Rachel's interview prep lives in **`docs/PROCESS-NOTES.md`**. It's kept out of git through
+`.git/info/exclude` (a local-only ignore list), so it never reaches the public repo. **Add to it at the end of every step**: new design
+decisions, trade-offs, bugs found, likely questions. Keep it in plain first-person talking
+points.
 
 Open questions for Rachel:
 1. (Answered: Step 1 is committed.)
