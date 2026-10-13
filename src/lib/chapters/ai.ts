@@ -1,21 +1,13 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { AI_MODEL, aiClient, isAiConfigured, logAiError } from "@/lib/ai/client";
 import { parseChapters, type Chapter } from "./list";
 
 /**
  * AI-suggested chapter lists. Optional: with no ANTHROPIC_API_KEY the app never calls
- * the API and readers use "my book has __ chapters" instead.
- *
- * The model is a setting so it can be swapped for a cheaper one (e.g. claude-haiku-5-5)
- * without code changes.
+ * the API and readers use "Add ___ chapters" instead.
  */
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
-
-export function isAiConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
-}
 
 // The model must say whether it actually knows the book before listing anything.
 // This is how "be honest about uncertainty" (VISION §4.2) is enforced: when it doesn't
@@ -52,9 +44,8 @@ export async function suggestChaptersWithAi(book: BookForAi): Promise<Chapter[] 
     .join("\n");
 
   try {
-    const client = new Anthropic();
-    const response = await client.beta.messages.parse({
-      model: MODEL,
+    const response = await aiClient().beta.messages.parse({
+      model: AI_MODEL,
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: `List the chapters of this book.\n\n${description}` }],
@@ -73,15 +64,7 @@ export async function suggestChaptersWithAi(book: BookForAi): Promise<Chapter[] 
     const parsed = parseChapters(answer.chapters);
     return parsed.ok ? parsed.chapters : null;
   } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) {
-      console.error("ANTHROPIC_API_KEY was rejected. Check the key in .env.local.");
-    } else if (error instanceof Anthropic.RateLimitError) {
-      console.error("Claude API rate limit hit while suggesting chapters.");
-    } else if (error instanceof Anthropic.APIError) {
-      console.error(`Claude API error ${error.status} while suggesting chapters:`, error.message);
-    } else {
-      console.error("Suggesting chapters failed", error);
-    }
+    logAiError("suggesting chapters", error);
     return null;
   }
 }

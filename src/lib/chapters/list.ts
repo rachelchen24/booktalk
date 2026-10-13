@@ -61,16 +61,16 @@ export function percentThrough(chapter: number, totalChapters: number): number {
 }
 
 /**
- * When a book counts as finished after the reader moves their spot: reaching the last
- * chapter finishes it (keeping the original date if it was already finished), and
- * moving back un-finishes it.
+ * When a book counts as finished after the reader moves their spot: reaching 100%
+ * finishes it (keeping the original date if it was already finished), and moving back
+ * un-finishes it. Percent, not "on the last chapter", because a spot found by page or
+ * time can be partway through the last chapter.
  */
 export function finishedAtAfterSpot(
-  chapter: number | null,
-  totalChapters: number,
+  percent: number | null,
   previous: string | null,
   now: Date = new Date(),
 ): string | null {
-  if (chapter === null || chapter < totalChapters) return null;
+  if (percent === null || percent < 100) return null;
   return previous ?? now.toISOString();
 }

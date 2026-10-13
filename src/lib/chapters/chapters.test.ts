@@ -119,14 +119,17 @@ describe("tocToChapters", () => {
 
 describe("finishedAtAfterSpot", () => {
   const now = new Date("2026-10-13T12:00:00Z");
-  it("finishes the book when you reach the last chapter", () => {
-    expect(finishedAtAfterSpot(30, 30, null, now)).toBe("2026-10-13T12:00:00.000Z");
+  it("finishes the book at 100%", () => {
+    expect(finishedAtAfterSpot(100, null, now)).toBe("2026-10-13T12:00:00.000Z");
   });
-  it("keeps the original finish date if you tap the last chapter again", () => {
-    expect(finishedAtAfterSpot(30, 30, "2026-03-01T00:00:00.000Z", now)).toBe("2026-03-01T00:00:00.000Z");
+  it("keeps the original finish date if you reach the end again", () => {
+    expect(finishedAtAfterSpot(100, "2026-03-01T00:00:00.000Z", now)).toBe("2026-03-01T00:00:00.000Z");
+  });
+  it("doesn't finish a book you're partway through the last chapter of", () => {
+    expect(finishedAtAfterSpot(98.5, null, now)).toBeNull();
   });
   it("un-finishes the book if you move your spot back", () => {
-    expect(finishedAtAfterSpot(29, 30, "2026-03-01T00:00:00.000Z", now)).toBeNull();
-    expect(finishedAtAfterSpot(null, 30, "2026-03-01T00:00:00.000Z", now)).toBeNull();
+    expect(finishedAtAfterSpot(96.7, "2026-03-01T00:00:00.000Z", now)).toBeNull();
+    expect(finishedAtAfterSpot(null, "2026-03-01T00:00:00.000Z", now)).toBeNull();
   });
 });

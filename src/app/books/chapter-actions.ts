@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAiConfigured } from "@/lib/chapters/ai";
+import { isAiConfigured } from "@/lib/ai/client";
 import { finishedAtAfterSpot, parseChapters, percentThrough, resolveChapters } from "@/lib/chapters/list";
 import { requestAiSuggestion } from "@/lib/chapters/suggestions";
 import { parseChapter } from "@/lib/library/notes";
@@ -62,7 +62,7 @@ export async function saveChapters(_prev: ActionState, formData: FormData): Prom
       chapter_suggestion_id: null,
       current_chapter: spot,
       current_percent: spot === null ? null : percentThrough(spot, total),
-      finished_at: finishedAtAfterSpot(spot, total, entry.finished_at),
+      finished_at: finishedAtAfterSpot(spot === null ? null : percentThrough(spot, total), entry.finished_at),
     })
     .eq("id", entry.id);
   if (error) {
@@ -88,7 +88,7 @@ export async function markSpot(formData: FormData): Promise<void> {
     .update({
       current_chapter: chapter,
       current_percent: percentThrough(chapter, chapters.length),
-      finished_at: finishedAtAfterSpot(chapter, chapters.length, entry.finished_at),
+      finished_at: finishedAtAfterSpot(percentThrough(chapter, chapters.length), entry.finished_at),
       last_opened_at: new Date().toISOString(),
     })
     .eq("id", entry.id);

@@ -11,7 +11,14 @@
    ```
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
-5. `npm install`, then `npm run dev`, then open http://localhost:3000.
+5. **Optional: AI chapter suggestions.** Add `ANTHROPIC_API_KEY` to `.env.local` (a key from
+   console.anthropic.com; usage is billed per token). Without it the app works fully and
+   readers set up chapters with "Add ___ chapters". `ANTHROPIC_MODEL` picks the model
+   (default `claude-opus-5-5`; `claude-haiku-5-5` is much cheaper).
+6. `npm install`, then `npm run dev`, then open http://localhost:3000.
+
+Migrations so far: `0001_login_attempts`, `0002_library`, `0003_notes`, `0004_chapters`,
+`0005_finished_at`, `0006_audiobook_length`. Run them in order.
 
 `npm test` runs the unit tests. They don't need Supabase.
 

@@ -6,7 +6,7 @@ import { Cover } from "@/components/books/Cover";
 import { authorsLabel, spotLabel } from "@/lib/library/format";
 import { ChapterSection } from "@/components/chapters/ChapterSection";
 import { ChapterSetup } from "@/components/chapters/ChapterSetup";
-import { isAiConfigured } from "@/lib/chapters/ai";
+import { isAiConfigured } from "@/lib/ai/client";
 import { resolveChapters } from "@/lib/chapters/list";
 import { ensureOpenLibrarySuggestion, getSuggestions, type Suggestion } from "@/lib/chapters/suggestions";
 import type { Note } from "@/lib/library/notes";
@@ -72,7 +72,7 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
       {/* 1. The two big buttons, in the spec's order. Wired up in steps 4–5. */}
       <div className="mt-8 grid grid-cols-2 gap-3">
         <BigButton title="Recap to my spot" hint="What's happened so far" />
-        <BigButton title="Find my place" hint="By chapter, page, time…" />
+        <BigButton title="Find my place" hint="By chapter, page, time…" href={`/books/${entry.id}/find`} />
       </div>
 
       {/* 2. Chapters with their notes, collapsed, with green dots (or setup, if no chapters yet). */}
@@ -121,16 +121,26 @@ function placeNotes(notes: Note[], totalChapters: number) {
   return { notesByChapter, unplacedNotes };
 }
 
-function BigButton({ title, hint }: { title: string; hint: string }) {
-  return (
-    <button
-      type="button"
-      disabled
-      title="Coming soon"
-      className="rounded-2xl bg-accent px-4 py-5 text-left text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:px-5"
-    >
+/** One of the two big buttons. Without an href it's shown disabled ("coming soon"). */
+function BigButton({ title, hint, href }: { title: string; hint: string; href?: string }) {
+  const content = (
+    <>
       <span className="block font-serif text-lg font-semibold leading-tight">{title}</span>
       <span className="mt-1 block text-sm opacity-90">{hint}</span>
+    </>
+  );
+  const className = "rounded-2xl bg-accent px-4 py-5 text-left text-accent-foreground sm:px-5";
+
+  if (href) {
+    return (
+      <Link href={href} className={`${className} transition-opacity hover:opacity-90`}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" disabled title="Coming soon" className={`${className} cursor-not-allowed opacity-50`}>
+      {content}
     </button>
   );
 }

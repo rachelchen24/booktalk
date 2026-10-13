@@ -31,6 +31,7 @@ export type LibraryEntry = {
   total_pages: number | null;
   calibration_chapter: number | null;
   calibration_page: number | null;
+  audiobook_minutes: number | null;
   book: Book;
 };
 
@@ -38,7 +39,7 @@ export type EditionFormat = "hardcover" | "paperback" | "mass_market" | "ebook" 
 
 const ENTRY_COLUMNS =
   "id, isbn, edition_cover_id, current_chapter, current_percent, rating, final_thoughts, last_opened_at, finished_at, " +
-  "chapters, chapter_suggestion_id, publisher, format, total_pages, calibration_chapter, calibration_page, " +
+  "chapters, chapter_suggestion_id, publisher, format, total_pages, calibration_chapter, calibration_page, audiobook_minutes, " +
   "suggestion:chapter_suggestions (chapters), " +
   "book:books (id, ol_work_key, title, authors, cover_id, first_publish_year)";
 

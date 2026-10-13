@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-13, Step 2 built and waiting on migration 0002 + testing (see "Step 2" below)._
+_Last updated: 2026-10-13. Steps 1–3 done (plus extras: notes, stats, progress bars). Step 4 (Find my place) in progress._
 
 ---
 
@@ -278,8 +278,28 @@ Not built in Step 3 (deferred): physical dimensions (best-effort in spec), and p
 - **Library: "N books read in YYYY"** stat + **progress bar** on every book
   (`components/books/ProgressBar.tsx`). "Read" = `finished_at` set when the reader marks the
   **last chapter**, kept if re-tapped, cleared if the spot moves back (`finishedAtAfterSpot`,
-  tested). Year is UTC. Migration **0005_finished_at.sql**: ⏳ Rachel needs to run it (the app
-  errors until she does). Rachel wants to **brainstorm more stats later**.
+  tested). Year is UTC. Migration **0005_finished_at.sql**: ✅ applied (2026-10-13). Rachel wants to **brainstorm more stats later**.
+
+### Step 4: Find my place (built 2026-10-13, waiting on migration 0006 + Rachel's test)
+| File | What it does |
+|---|---|
+| `src/lib/place/estimate.ts` | Pure page/time/% → chapter: `estimateFromPage` (optional calibration point splits the book at "chapter X starts on page Y"), `estimateFromTime`, `estimateFromPercent`, `parseDuration` ("3h 42m", "3:42", "222"), `formatDuration`. Returns `{ chapter, percent, candidates: [prev, best, next] }`. A `+1e-9` nudge fixes float boundary bugs ((15/22)*22 = 14.999…); there's a test that fails without it. |
+| `src/lib/place/memory.ts` | `keywords` (stop words, light stemming, @tags), `matchNotes`: notes-first "last thing I remember", score = share of keywords in the chapter's best note; ties go to the later chapter |
+| `src/lib/place/ai-memory.ts` | Optional AI fallback. The model returns **chapter numbers only** (never descriptions), validated against the list, max 3 |
+| `src/lib/ai/client.ts` | Shared `AI_MODEL`, `isAiConfigured`, `aiClient`, `logAiError` (chapters/ai.ts now uses it) |
+| `src/app/books/place-actions.ts` | `setSpot` (chapter checked against the server's list; saves the estimate %; remembers `total_pages` / `audiobook_minutes`), `findByMemory` (notes → AI → helpful error) |
+| `src/components/place/FindMyPlace.tsx` | "Find my place by:" picker. Chapter / Page / Audiobook time / Percentage compute **in the browser** (instant); Memory goes to the server. Candidates show only number, title, % → "This is my spot" |
+| `src/app/books/[id]/find/page.tsx` | The page; the book page's "Find my place" BigButton now links here (Recap is still disabled until Step 5) |
+| `supabase/migrations/0006_audiobook_length.sql` | `library_entries.audiobook_minutes` |
+
+**Spot semantics changed:** a spot can now be partway through a chapter ("Chapter 13 · 40%").
+`current_chapter` = the chapter you've reached; `current_percent` = how far through the book.
+Tapping a chapter in the list still means "end of this chapter". **Finished = percent ≥ 100**
+(`finishedAtAfterSpot(percent, previous)`), not "on the last chapter".
+**Audnexus not used:** it needs an Audible ASIN, which we don't have. Time is estimated from total length.
+Mishaps this round (both fixed, no harm): a perl one-liner mangled `lib/chapters/list.ts`
+(repaired by hand; use the Edit tool for multi-line edits), and a stray `git stash` that did
+nothing (verified empty).
 
 ### Quick note box (added at Rachel's request, now permanent)
 Rachel found it odd that the book page had no notes, so a basic note box was pulled forward

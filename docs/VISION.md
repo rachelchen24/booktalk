@@ -51,7 +51,8 @@ Every feature should make that moment faster or more trustworthy.
   - Implementation note: Supabase requires passwords of 6+ characters, so the PIN is converted server-side into a longer password before it reaches Supabase. The reader only ever types their PIN.
 - Security that doesn't add friction:
   - PIN is hashed, never stored in plain text.
-  - **Lockout after 5 failed attempts** (this is what makes a 4-digit PIN safe enough — a bot can't try all 10,000).
+  - **Lockout after 5 failed attempts** for 15 minutes (this is what makes a 4-digit PIN safe enough — a bot can't try all 10,000).
+  - **Unlock any time by email:** a locked-out reader can get a one-time link that logs them in and lifts the lock, instead of waiting.
   - Forgot PIN → reset link by email.
 - The library, spots, and notes are saved to the account (database), so they sync across devices.
 
@@ -59,7 +60,8 @@ Every feature should make that moment faster or more trustworthy.
 - Add books easily: search by title/author, or enter an ISBN.
 - Home screen shows the reader's books, **most recently read first** — "read" means most recently *opened* (or added), so the book you're in sits at the top.
 - Each book shows its **cover** (from Open Library, with a plain fallback when there isn't one).
-- Each book shows the reader's current spot (chapter + %).
+- Each book shows the reader's current spot (chapter + %) and a **progress bar** for % complete, right on the library page. A book at 100% shows as **Finished**.
+- **Reading stats** at the top of the library. First stat: **"N books read in [year]"**, where a book counts as read when the reader marks its last chapter as their spot (moving the spot back un-finishes it). More stats to be brainstormed later.
 
 ### 5.2a Book page (what you see when you click a book)
 Top to bottom:
@@ -103,7 +105,9 @@ BookTalk uses this to find the right edition (or the closest match) and map page
 A clear "**Find my place by:**" selector with these options:
 - **Chapter** — tap it in the list or grid.
 - **Page number** — mapped to a chapter using the edition (5.3).
-- **Audiobook time** — hours and minutes (e.g. 3h 42m). Mapped using audiobook chapter timings where available (e.g. Audnexus data for Audible titles), otherwise estimated from total length.
+- **Audiobook time** — hours and minutes (e.g. 3h 42m). Estimated from the audiobook's total length (asked once, then remembered). *Later:* real chapter timings from Audnexus for Audible titles, which needs the book's Audible ID (ASIN).
+- **Page, time and % results are estimates** (chapters vary in length), so BookTalk shows its best guess plus the chapters on either side, and the reader taps the right one. A "chapter X starts on page Y" reference point from the edition (5.3) makes page estimates more accurate.
+- A spot can be partway through a chapter (e.g. "Chapter 13 · 40%"). A book counts as finished at 100%.
 - **Percentage** through the book.
 - **Last remembered event** — the reader types the last thing they remember, e.g. *"Elphaba ran away with Fiyero."*
   - BookTalk returns **several possible spots**, each showing **only**:
@@ -128,6 +132,9 @@ A clear "**Find my place by:**" selector with these options:
 
 ### 5.7 Notes
 Not one big text box for the whole book — each note is its own small card, attached to a spot.
+- **Notes are editable and deletable** in place, wherever they're shown.
+- **Two ways to add a note:** a **quick note box** at the top of the book page (chapter optional, the fastest way to jot something when you stop), and an "add a note" box inside each chapter. Notes saved without a chapter appear under "Notes without a chapter" with a "Move to chapter" option.
+- **Shift + Enter saves** a note in any note box; plain Enter makes a new line.
 - Short notes like *"Character A killed Character B."*
 - Anchored to a **chapter** (required) plus optional:
   - **page number**,
@@ -190,11 +197,11 @@ This is a GitHub portfolio project for recruiters, so the repo should have:
 Built step by step, with each piece explained, so every design decision can be discussed in interviews.
 
 ## 11. Build order
-1. Scaffold + accounts (email + 4/6-digit PIN)
-2. Library + book search / ISBN + book page layout (2 buttons, collapsed notes, rating)
-3. Editions + chapter lists (list/grid views, one-tap spot)
-4. Find my place (chapter, page, time, %, last remembered event)
+1. Scaffold + accounts (email + 4/6-digit PIN) — ✅ plus "unlock by email" for locked accounts
+2. Library + book search / ISBN + book page layout (2 buttons, collapsed notes, rating) — ✅ plus basic notes pulled forward from step 6 (quick note box, editable cards, Shift + Enter)
+3. Editions + chapter lists (list/grid views, one-tap spot) — ✅ plus library progress bars and the "books read this year" stat
+4. Find my place (chapter, page, time, %, last remembered event) — ✅ built (notes-first memory search; AI optional)
 5. Recaps (spoiler-free, notes-aware, tone matching)
-6. Notes (cards, badges, all-notes view, @tags, optional quick/voice note)
+6. Notes (remaining: page/timestamp/quote anchors, @tags, optional voice note — cards, editing, quick note and green dots already exist)
 7. Deploy + README
 8. v1.5: character & place lookups
