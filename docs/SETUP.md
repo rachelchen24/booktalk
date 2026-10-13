@@ -17,6 +17,8 @@
 
 ## Optional: email links that work on any device
 
+> On the Free plan, Supabase only allows editing templates once custom SMTP is set up (below).
+
 The default Supabase email templates use a PKCE `?code=` link, which only works in the browser
 where you signed up or asked for the reset. To make links work on any device, edit
 Authentication → Email Templates and point the link at:

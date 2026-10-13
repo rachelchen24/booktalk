@@ -67,10 +67,7 @@ Claude API · Vercel.
 
 ## Environment gotchas
 
-- **Node 24** is installed at `C:\Program Files\nodejs`, but it wasn't on the terminal PATH in
-  the first session. If `node` isn't found, prepend it: bash
-  `export PATH="/c/Program Files/nodejs:$PATH"`, PowerShell
-  `$env:Path = "C:\Program Files\nodejs;$env:Path"`. (Restarting VS Code should fix this.)
+- **Node 24.20 / npm 11.19**, on PATH (fixed by restarting VS Code, confirmed 2026-10-13).
 - **Next.js 16.4** differs from older versions. Check `node_modules/next/dist/docs/` before
   using an API you're unsure of (see AGENTS.md).
   - Middleware is now **`src/proxy.ts`** (export `proxy`, Node runtime).
@@ -161,17 +158,32 @@ clicking any of them proves the reader owns the email.
 - ✅ `tsc`, `eslint`, 16 Vitest tests, and `next build` all pass. The smoke test (placeholder
   env, no real Supabase) showed `/` → 307 /login, auth pages 200, `/reset-pin` → 307 /login,
   and a bad email link → /login?link=expired.
-- ❌ **Not yet tested against a real Supabase project.** Signup, login, lockout, unlock, and
-  reset have never run end to end. Do that before or early in Step 2, once Rachel has created
-  the project (docs/SETUP.md).
-- ❌ Nothing is committed yet. The repo has no commits. Ask Rachel before committing. The spec
-  wants a clean, meaningful history, e.g. one commit for the scaffold and one for PIN auth.
+- ✅ **Supabase project set up (2026-10-13):** `booktalk`, ref `qmeuzxcailyykjrcgdef`,
+  us-west-2, Free plan. `.env.local` written (legacy anon + service_role keys, new random
+  `PIN_PEPPER`). Migration 0001 applied. Redirect allow-list = `http://localhost:3000/**`.
+  Set up through the Management API with a personal access token, which Rachel has since
+  deleted. New migrations: she pastes them into the dashboard SQL Editor, or makes a fresh
+  token.
+- ✅ A no-email self-test against the real project passed: confirmed user created via the admin
+  API, login with the derived password works, a wrong PIN gives `invalid_credentials`, the 5th
+  failure locks for 15 min, anon gets 42501 calling the RPC and sees 0 rows in
+  `login_attempts`, and cleanup works. It also found that the DB clock runs ~0.5 s ahead, which
+  made the message say "16 minutes", so `lockMinutesRemaining` is now capped at
+  LOCKOUT_MINUTES (17 tests).
+- ⏳ Manual UI test by Rachel (signup email → confirm → wrong PINs → unlock link) in progress.
+- **Free-plan limits found:** email templates **can't be edited** without custom SMTP, so links
+  are the default PKCE `?code=` style and only work in the browser that requested them. The
+  built-in sender allows **2 emails/hour** (`rate_limit_email_sent = 2`).
+- ✅ Step 1 committed by Rachel (2026-10-12). Ask before future commits. The spec
+  wants a clean, meaningful history: one focused commit per piece.
 
 ### Small known issues / ideas
 - In `LoginForm`, after an unlock link is sent, its message stays visible over later login
   errors until the page reloads. This is minor.
-- Supabase's built-in email sender allows only a few emails an hour. Custom SMTP is needed
-  before the live demo (see SETUP.md).
+- **Before the live demo (Step 7):** set up custom SMTP (e.g. Resend). That lifts the 2/hour
+  limit and unlocks template editing, so switch the templates to `token_hash` links that work
+  on any device (see SETUP.md). Also add the Vercel URL to the redirect allow-list and handle
+  free projects pausing after 7 days of inactivity.
 - A possible small test target: move `safeNextPath` from `auth/confirm/route.ts` into `lib/` and
   unit-test it.
 
@@ -188,5 +200,5 @@ Library + book search/ISBN + book page layout (VISION §5.2, §5.2a):
   notes collapsed by chapter with green dots, rating and final thoughts at the end.
 
 Open questions for Rachel:
-1. Commit Step 1 now, and how should the commits be split?
-2. Has she set up Supabase yet, so we can test auth end to end?
+1. (Answered: Step 1 is committed.)
+2. (Answered: Supabase is set up. See "Verified" above.)

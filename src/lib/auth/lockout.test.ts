@@ -17,6 +17,11 @@ describe("lockMinutesRemaining", () => {
     expect(lockMinutesRemaining("2026-01-01T12:00:01Z", now)).toBe(1);
     expect(lockMinutesRemaining("2026-01-01T12:14:30Z", now)).toBe(15);
   });
+
+  it("never exceeds the lockout length, even if the database clock runs ahead", () => {
+    // Database clock half a second ahead: lock ends 15 min 0.5 s from the app's "now".
+    expect(lockMinutesRemaining("2026-01-01T12:15:00.500Z", now)).toBe(15);
+  });
 });
 
 describe("lockedMessage", () => {

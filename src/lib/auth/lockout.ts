@@ -10,11 +10,15 @@
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_MINUTES = 15;
 
-/** Whole minutes left on a lock (rounded up), or 0 if the account isn't locked. */
+/**
+ * Whole minutes left on a lock (rounded up), or 0 if the account isn't locked.
+ * Capped at LOCKOUT_MINUTES: the lock time comes from the database's clock, which can
+ * run slightly ahead of the app server's, and "16 minutes" would look like a bug.
+ */
 export function lockMinutesRemaining(lockedUntil: string | null, now: Date = new Date()): number {
   if (!lockedUntil) return 0;
   const msLeft = new Date(lockedUntil).getTime() - now.getTime();
-  return msLeft > 0 ? Math.ceil(msLeft / 60_000) : 0;
+  return msLeft > 0 ? Math.min(LOCKOUT_MINUTES, Math.ceil(msLeft / 60_000)) : 0;
 }
 
 export function lockedMessage(minutes: number): string {

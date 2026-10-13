@@ -35,6 +35,10 @@ Every feature should make that moment faster or more trustworthy.
 3. **Short over thorough.** 3–5 bullets first; more detail on request.
 4. **Format-agnostic.** Page, timestamp, percentage, chapter, or remembered event in — the same recap out. Under the hood, every input is converted to a **chapter**.
 5. **Low friction.** Easy login, adding books and marking your spot should take one or two taps. No password gymnastics.
+6. **Feels like a book, not a chatbot.** Recaps, lookups, and place-finding results should read like part of the book's world — a "previously on…" page in a novel, a friend catching you up — not like output pasted from an AI chat.
+   - **Writing:** plain, natural sentences in the recap's tone. No chatbot filler ("Sure! Here's a recap…", "Great question", "I hope this helps"), no "As an AI…", no emojis, no wall of bold text, no stock AI phrasing ("delve", "tapestry", "it's worth noting", "a testament to"), no em-dash pileups.
+   - **Look:** no chat bubbles, no typing/streaming text effect, no sparkle ✨ or robot icons, no "AI-generated" badges. Recaps use the same book typography as the rest of the app (serif headings, comfortable reading width).
+   - **Still honest (see principle 2):** not *looking* like a chatbot is not the same as hiding the source. A small, quiet line says where a recap comes from (e.g. "Based on BookTalk's knowledge of this book and your notes"), and the low-confidence warning is shown in plain words.
 
 ---
 
@@ -53,7 +57,8 @@ Every feature should make that moment faster or more trustworthy.
 
 ### 5.2 Library
 - Add books easily: search by title/author, or enter an ISBN.
-- Home screen shows the reader's books, **most recently read first**.
+- Home screen shows the reader's books, **most recently read first** — "read" means most recently *opened* (or added), so the book you're in sits at the top.
+- Each book shows its **cover** (from Open Library, with a plain fallback when there isn't one).
 - Each book shows the reader's current spot (chapter + %).
 
 ### 5.2a Book page (what you see when you click a book)
@@ -116,6 +121,7 @@ A clear "**Find my place by:**" selector with these options:
 - Uses the reader's notes as ground truth.
 - **Tone:** neutral by default, but **inferred from the reader's notes** — e.g. if the reader leaves humorous notes, the recap matches that energy.
 - Shows a confidence warning when BookTalk doesn't know the book well.
+- **Must not look or read like a chatbot** — see principle 6.
 
 ### 5.7 Notes
 Not one big text box for the whole book — each note is its own small card, attached to a spot.
