@@ -89,7 +89,10 @@ BookTalk uses this to find the right edition (or the closest match) and map page
 - When a book is added, BookTalk proposes a chapter list (number + title):
   - from Open Library's table of contents if available,
   - otherwise AI-suggested.
-- The reader can **confirm or edit** it (e.g. "my edition has 32 chapters, not 30"). Confirmed lists are **shared**, so the next reader of that book gets them instantly.
+- The reader can **confirm or edit** it (e.g. "my edition has 32 chapters, not 30").
+  - **Suggestions are shared, edits are private.** The suggested list for a book (from Open Library or the AI) is stored once and offered to every reader, so the next reader gets it instantly and the AI isn't asked twice.
+  - **A reader's edits only ever apply to them.** Editing makes the reader's own copy; nobody else sees it, and nobody can change another reader's chapters.
+  - If no suggestion is available (no table of contents, AI not set up), the reader can say "my book has __ chapters" and add titles if they want.
 - **Marking your spot is one tap** on a chapter.
 - **Two views, toggleable:**
   - **List** of chapters.
@@ -166,7 +169,7 @@ Because readers often stop abruptly, this is **optional**, never required:
 ## 8. Constraints & known limits
 - **No access to book text.** Books are copyrighted and audiobook/ebook apps are DRM-protected; BookTalk does not scrape SparkNotes/LitCharts or extract book content. Recaps come from the AI's general knowledge, shared chapter data, and the reader's notes.
 - **AI accuracy varies by book popularity.** Strong for popular books, weaker for obscure ones — hence the confidence warnings and notes-as-ground-truth.
-- **Chapter data isn't freely available everywhere** — hence AI-suggested + reader-confirmed, shared chapter lists.
+- **Chapter data isn't freely available everywhere** — hence shared suggestions (Open Library table of contents, else AI) that each reader confirms or edits privately. In practice Open Library rarely has a usable table of contents (checked: 2 of 54 *Wicked* editions, both junk), so the AI suggestion and manual entry carry most of the weight.
 
 ## 9. Stack
 - **Next.js + TypeScript + Tailwind** — frontend and API routes

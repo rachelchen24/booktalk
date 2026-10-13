@@ -2,12 +2,13 @@
 
 import { useActionState } from "react";
 import { addNote, type NoteState } from "../actions";
+import { submitOnShiftEnter } from "@/components/notes/keyboard";
 import { MAX_CHAPTER, MAX_NOTE_LENGTH } from "@/lib/library/notes";
 
 /**
- * TEMPORARY (see docs/PROGRESS.md): a single note box for the whole book, used until
- * step 3 adds chapter lists. After that, notes are added from inside each chapter
- * and this goes away.
+ * A quick note box for the whole book, at the top of the book page. Rachel chose to
+ * keep it alongside the per-chapter note boxes: it's the fastest way to jot something
+ * down when you stop reading.
  */
 export function QuickNoteBox({ entryId }: { entryId: string }) {
   const [state, action, pending] = useActionState(addNote, {} as NoteState);
@@ -23,7 +24,8 @@ export function QuickNoteBox({ entryId }: { entryId: string }) {
           maxLength={MAX_NOTE_LENGTH}
           rows={2}
           defaultValue={state.body}
-          placeholder="What just happened?"
+          placeholder="What just happened? (Shift + Enter to save)"
+          onKeyDown={submitOnShiftEnter}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
         />
       </label>

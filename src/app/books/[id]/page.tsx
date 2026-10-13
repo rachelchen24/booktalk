@@ -4,6 +4,12 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { Cover } from "@/components/books/Cover";
 import { authorsLabel, spotLabel } from "@/lib/library/format";
+import { ChapterSection } from "@/components/chapters/ChapterSection";
+import { ChapterSetup } from "@/components/chapters/ChapterSetup";
+import { isAiConfigured } from "@/lib/chapters/ai";
+import { resolveChapters } from "@/lib/chapters/list";
+import { ensureOpenLibrarySuggestion, getSuggestions, type Suggestion } from "@/lib/chapters/suggestions";
+import type { Note } from "@/lib/library/notes";
 import { getEntry, getNotes } from "@/lib/library/queries";
 import { MarkOpened } from "./MarkOpened";
 import { NotesByChapter } from "./NotesByChapter";
@@ -34,6 +40,14 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
   if (!entry) notFound();
   const { book } = entry;
 
+  const chapters = resolveChapters(entry.chapters, entry.suggestion);
+  let suggestions: Suggestion[] = [];
+  if (!chapters) {
+    // The free source (Open Library) is checked automatically; AI only when the reader asks.
+    await ensureOpenLibrarySuggestion(book);
+    suggestions = await getSuggestions(book.id);
+  }
+
   return (
     <>
       <MarkOpened entryId={entry.id} />
@@ -61,11 +75,23 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
         <BigButton title="Find my place" hint="By chapter, page, time…" />
       </div>
 
-      {/* 2. Notes by chapter, collapsed, with green dots. */}
+      {/* 2. Chapters with their notes, collapsed, with green dots (or setup, if no chapters yet). */}
       <section className="mt-10 space-y-4">
-        <h2 className="font-serif text-lg font-semibold">Notes by chapter</h2>
+        <h2 className="font-serif text-lg font-semibold">Chapters &amp; notes</h2>
         <QuickNoteBox entryId={entry.id} />
-        <NotesByChapter notes={notes} />
+        {chapters ? (
+          <ChapterSection
+            entryId={entry.id}
+            chapters={chapters}
+            currentChapter={entry.current_chapter}
+            {...placeNotes(notes, chapters.length)}
+          />
+        ) : (
+          <>
+            <ChapterSetup entryId={entry.id} suggestions={suggestions} aiAvailable={isAiConfigured()} />
+            <NotesByChapter notes={notes} />
+          </>
+        )}
       </section>
 
       {/* 3. Final notes / rating, after the last chapter. */}
@@ -79,6 +105,20 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
       </div>
     </>
   );
+}
+
+/** Splits notes into their chapters, plus the ones whose chapter isn't in the list. */
+function placeNotes(notes: Note[], totalChapters: number) {
+  const notesByChapter: Record<number, Note[]> = {};
+  const unplacedNotes: Note[] = [];
+  for (const note of notes) {
+    if (note.chapter !== null && note.chapter <= totalChapters) {
+      (notesByChapter[note.chapter] ??= []).push(note);
+    } else {
+      unplacedNotes.push(note);
+    }
+  }
+  return { notesByChapter, unplacedNotes };
 }
 
 function BigButton({ title, hint }: { title: string; hint: string }) {

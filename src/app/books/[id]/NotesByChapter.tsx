@@ -1,7 +1,5 @@
 import { groupByChapter, type Note } from "@/lib/library/notes";
-import { DeleteNoteButton } from "./DeleteNoteButton";
-
-const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+import { NoteCard } from "@/components/notes/NoteCard";
 
 /**
  * One collapsed row per chapter with notes, marked with a green dot (VISION §5.2a).
@@ -34,14 +32,8 @@ export function NotesByChapter({ notes }: { notes: Note[] }) {
             </summary>
             <ul className="space-y-3 px-4 pb-4 pl-9">
               {notes.map((note) => (
-                <li key={note.id} className="rounded-lg border border-border bg-background px-3 py-2">
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{note.body}</p>
-                  <div className="mt-1 flex items-center justify-between gap-3">
-                    <time dateTime={note.created_at} className="text-xs text-muted">
-                      {dateFormat.format(new Date(note.created_at))}
-                    </time>
-                    <DeleteNoteButton noteId={note.id} />
-                  </div>
+                <li key={note.id}>
+                  <NoteCard note={note} />
                 </li>
               ))}
             </ul>

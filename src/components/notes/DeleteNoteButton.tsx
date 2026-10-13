@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteNote } from "../actions";
+import { deleteNote } from "@/app/books/actions";
 
 export function DeleteNoteButton({ noteId }: { noteId: string }) {
   return (

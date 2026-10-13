@@ -20,11 +20,26 @@ export type LibraryEntry = {
   rating: number | null;
   final_thoughts: string | null;
   last_opened_at: string;
+  finished_at: string | null;
+  // Chapter list: the reader's own copy, or a pointer to a shared suggestion (VISION §5.4).
+  chapters: unknown;
+  chapter_suggestion_id: string | null;
+  suggestion: { chapters: unknown } | null;
+  // Edition details (VISION §5.3).
+  publisher: string | null;
+  format: EditionFormat | null;
+  total_pages: number | null;
+  calibration_chapter: number | null;
+  calibration_page: number | null;
   book: Book;
 };
 
+export type EditionFormat = "hardcover" | "paperback" | "mass_market" | "ebook" | "audiobook" | "other";
+
 const ENTRY_COLUMNS =
-  "id, isbn, edition_cover_id, current_chapter, current_percent, rating, final_thoughts, last_opened_at, " +
+  "id, isbn, edition_cover_id, current_chapter, current_percent, rating, final_thoughts, last_opened_at, finished_at, " +
+  "chapters, chapter_suggestion_id, publisher, format, total_pages, calibration_chapter, calibration_page, " +
+  "suggestion:chapter_suggestions (chapters), " +
   "book:books (id, ol_work_key, title, authors, cover_id, first_publish_year)";
 
 // These run as the logged-in reader, so row-level security already limits them to

@@ -230,17 +230,71 @@ and 8.
   on purpose.)
 - ✅ Manual UI test by Rachel: search, add, covers, ordering, rating, and remove all look good.
 
-### Quick note box (added at Rachel's request, TEMPORARY)
+### Decisions for Step 3 (2026-10-13)
+- **Claude API key: later.** Build the AI chapter suggestion code, but without
+  `ANTHROPIC_API_KEY` it must fall back cleanly to "my book has __ chapters". Rachel probably
+  won't pay for the API, so the app must be fully usable with no key.
+- **Chapter lists: suggestions shared, edits private** (VISION §5.4 updated). Suggested lists
+  per book are stored once and shared. Any edit creates the reader's own copy, visible only to
+  them.
+- **Rachel probably won't deploy.** VISION §10/§11 still say live demo + Vercel; she hasn't
+  asked to change them. The README could use screenshots/GIF instead. Ask before Step 7.
+
+### Step 3 build (2026-10-13): built, waiting on migration 0004
+| File | What it does |
+|---|---|
+| `supabase/migrations/0004_chapters.sql` | `chapter_suggestions` (shared, select-only for readers, unique per book+source) + `library_entries` columns: `chapter_suggestion_id`, `chapters` jsonb (private copy), `publisher`, `format`, `total_pages`, `calibration_chapter`/`_page` (must be set together) |
+| `src/lib/chapters/list.ts` | `parseChapters` (always renumbers 1…N), `numberedChapters`, `chapterName`, `resolveChapters` (own copy wins over the chosen suggestion), `percentThrough` |
+| `src/lib/chapters/open-library-toc.ts` | `tocToChapters`: strict filter (≥3 entries, no "v.1."/"--" junk, ≥80% Latin script, drops front/back matter, keeps untitled "Chapter N" so numbering doesn't shift) |
+| `src/lib/books/catalog.ts` → `getTocChapters` | Scans up to 100 editions (English first), `"use cache"` for weeks |
+| `src/lib/chapters/ai.ts` | Optional Claude suggestion. Model from `ANTHROPIC_MODEL`, default `claude-opus-5-5` (per the claude-api skill; Rachel can choose `claude-haiku-5-5`). `messages.parse` + Zod schema with a `knows_chapters` gate, titles only (no spoilers), `effort: low`, `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`). No key → never called. |
+| `src/lib/chapters/suggestions.ts` | `getSuggestions`, `ensureOpenLibrarySuggestion` (automatic, free), `requestAiSuggestion` (only on click); stored via admin with `ignoreDuplicates` |
+| `src/app/books/chapter-actions.ts` | `chooseSuggestion`, `suggestWithAi`, `saveChapters` (private copy; clamps spot), `markSpot` (chapter count from the server, not the form), `moveNote`, `saveEdition` |
+| `src/components/chapters/ChapterEditor.tsx` | **"Add ___ chapters" button** (Rachel's request): type 33 → Chapter 1…33 rows with optional titles; remove rows; save |
+| `src/components/chapters/ChapterSection.tsx` | List/grid toggle (remembered with `useSyncExternalStore` + localStorage); list rows = `<details>` with notes + per-chapter note form + bookmark spot button; grid tap = mark spot; read chapters tinted; "Notes without a chapter" with Move-to-chapter |
+| `src/components/chapters/ChapterSetup.tsx`, `AiSuggestButton.tsx`, `EditionForm.tsx` | Setup panel when no chapters; edition form |
+| `src/app/books/[id]/chapters/page.tsx` | "Chapters & edition" page (`?from=<suggestionId>` starts from a suggestion) |
+
+Spot semantics: `current_chapter` = **last chapter finished**; % = chapter ÷ total.
+Not built in Step 3 (deferred): physical dimensions (best-effort in spec), and page/time/% → chapter mapping (Step 4).
+
+### Round after Step 3 (2026-10-13)
+- ✅ Migration 0004 applied; chapters RLS self-test passed 15/15.
+- **Quick note box: KEEP IT** (Rachel loves it). This question is settled; don't ask again.
+- **Speed.** Supabase round trips measured at 0.7–1.8 s from Rachel's machine, with free-tier
+  spikes (one single-row update took 16 s). Changes: `getCurrentUser` uses `getClaims()`
+  (local ES256 check, no network; trade-off: a revoked session lasts until the token expires,
+  about an hour) instead of `getUser()`; optimistic bookmark (`useOptimistic` in
+  ChapterSection); optimistic new chapter notes; optimistic note edits. `getUser()` is kept
+  only in `resetPin`, on purpose.
+- **Dev warning fixed:** "`Date.now()` while prerendering" (every logged-in page since Step 2)
+  came from Supabase's expiry check during background prefetch prerenders. Fix:
+  `await connection()` at the start of `createClient()` in `lib/supabase/server.ts`.
+- **Notes are editable** (Rachel was rightly annoyed they weren't): shared
+  `components/notes/NoteCard.tsx` (Edit → textarea, Save / Shift+Enter, Esc cancels), `editNote`
+  action. `DeleteNoteButton` moved to `components/notes/`.
+- **Shift + Enter saves a note** in every note box (`components/notes/keyboard.ts`; skipped
+  while an input method is composing). Plain Enter = new line.
+- **Library: "N books read in YYYY"** stat + **progress bar** on every book
+  (`components/books/ProgressBar.tsx`). "Read" = `finished_at` set when the reader marks the
+  **last chapter**, kept if re-tapped, cleared if the spot moves back (`finishedAtAfterSpot`,
+  tested). Year is UTC. Migration **0005_finished_at.sql**: ⏳ Rachel needs to run it (the app
+  errors until she does). Rachel wants to **brainstorm more stats later**.
+
+### Quick note box (added at Rachel's request, now permanent)
 Rachel found it odd that the book page had no notes, so a basic note box was pulled forward
 from Step 6 (migration `0003_notes.sql`: `notes` table, chapter number optional for now).
 Files: `QuickNoteBox.tsx` (the temporary part), `NotesByChapter.tsx` (`<details>` per chapter,
 green dot, "No chapter yet" last), `DeleteNoteButton.tsx`, `addNote`/`deleteNote` in
 `books/actions.ts` (both call `refresh()` from next/cache), `getNotes` in queries,
 `lib/library/notes.ts` (`groupByChapter`, `parseChapter`, limits; tested). The insert/update
-RLS policies also check that the `entry_id` belongs to the reader. Known nit: note dates are
-formatted on the server (UTC), so they can be a day off for the reader.
-**Rachel's instruction: remove the quick note box once the expandable notes-by-chapter (Step 3)
-are working.** Notes then get added from inside each chapter, and the "No chapter yet"
+RLS policies also check that the `entry_id` belongs to the reader. Note dates are formatted on
+the server (UTC) and can be a day off; Rachel doesn't mind, so leave it.
+✅ Migration 0003 applied (2026-10-13). Notes RLS self-test passed 10/10, including attaching
+or moving a note onto another reader's entry → 42501.
+**Rachel's instruction (updated): she may want to KEEP the quick note box at the top. After the
+expandable notes-by-chapter (Step 3) are working, ASK her whether to keep or remove it. Don't
+remove it on your own.** Notes then get added from inside each chapter, and the "No chapter yet"
 notes need a way to be given a chapter.
 
 ## Interview notes

@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 /**
@@ -9,6 +10,10 @@ import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
  * Create a new one per request; never share it.
  */
 export async function createClient() {
+  // Supabase checks session expiry against the current time. Next can prerender pages
+  // in the background with the reader's cookies, where reading the clock isn't allowed,
+  // so stop prerendering here: anything using this client needs a real request.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl(), supabaseAnonKey(), {

@@ -150,6 +150,26 @@ export async function addNote(_prev: NoteState, formData: FormData): Promise<Not
   return { message: "Note saved.", chapter: chapterInput };
 }
 
+export async function editNote(_prev: NoteState, formData: FormData): Promise<NoteState> {
+  const noteId = String(formData.get("noteId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!isUuid(noteId)) return { error: "Something went wrong. Please reload the page." };
+  if (!body) return { error: "A note can't be empty. Delete it instead?", body };
+  if (body.length > MAX_NOTE_LENGTH) {
+    return { error: `Notes can be up to ${MAX_NOTE_LENGTH.toLocaleString()} characters.`, body };
+  }
+
+  // Row-level security limits this to the reader's own notes.
+  const supabase = await createClient();
+  const { error } = await supabase.from("notes").update({ body }).eq("id", noteId);
+  if (error) {
+    console.error("editNote failed", error);
+    return { error: "We couldn't save that. Please try again.", body };
+  }
+  refresh();
+  return { message: "Saved." };
+}
+
 export async function deleteNote(formData: FormData): Promise<void> {
   const noteId = String(formData.get("noteId") ?? "");
   if (!isUuid(noteId)) return;
