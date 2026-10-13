@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { FormState } from "@/app/(auth)/actions";
+import { Logo } from "@/components/Logo";
 
 export function AuthShell({ title, subtitle, children, footer, aside }: {
   title: string;
@@ -12,7 +13,8 @@ export function AuthShell({ title, subtitle, children, footer, aside }: {
 }) {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-      <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
+      <Link href="/" className="flex items-center gap-2.5 font-serif text-2xl font-semibold tracking-tight">
+        <Logo className="h-9 w-9" />
         BookTalk
       </Link>
       <p className="mb-8 mt-1 text-center text-sm text-muted">Spoiler-free recaps of what you&apos;ve read so far.</p>

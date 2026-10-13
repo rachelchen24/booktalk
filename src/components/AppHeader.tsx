@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { logOut } from "@/app/(auth)/actions";
+import { Logo } from "@/components/Logo";
 import { getCurrentUser } from "@/lib/auth/current-user";
 
 /** Static header shell; only the account menu waits for the session. */
 export function AppHeader() {
   return (
     <header className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6">
-      <Link href="/" className="font-serif text-xl font-semibold tracking-tight">
+      <Link href="/" className="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight">
+        <Logo className="h-7 w-7" />
         BookTalk
       </Link>
       <Suspense>
