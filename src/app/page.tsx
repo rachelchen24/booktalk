@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
@@ -6,6 +7,8 @@ import { ProgressBar } from "@/components/books/ProgressBar";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { authorsLabel, finishedInYear, spotLabel } from "@/lib/library/format";
 import { getLibrary, type LibraryEntry } from "@/lib/library/queries";
+
+export const metadata: Metadata = { title: "Your library" };
 
 export default function Home() {
   return (

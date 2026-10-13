@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthShell } from "@/components/auth/ui";
 import { ForgotPinForm } from "./ForgotPinForm";
+
+export const metadata: Metadata = { title: "Forgot your PIN?" };
 
 export default function ForgotPinPage() {
   return (

@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-13. Steps 1–6 built; Step 7 code done, Rachel is deploying. Then Step 8 (character & place lookups)._
+_Last updated: 2026-10-13. Steps 1–7 done. **Live at https://booktalk-rachel-chen.vercel.app** (repo github.com/rachelchen24/booktalk). Next: Step 8 (character & place lookups)._
 
 ---
 
@@ -325,8 +325,7 @@ Supabase accounts with a seeded sample library); **AI on, with a spend cap**, mo
 | `README.md` | Recruiter-facing: live demo link (placeholder `YOUR-APP`), why, features, stack, design decisions, run locally. Screenshots expected at `docs/screenshots/{library,book,find,recap}.png` |
 | `docs/SETUP.md` → "Deploying (Vercel)" | Click-by-click checklist |
 
-Status when written: 0008 ✅; **0007 and 0009 not applied; anonymous sign-ins OFF**; no
-GitHub remote; `gh` CLI not installed. ⚠️ `docs/PROGRESS.md` is committed and will be public.
+**Deployed (2026-10-13):** live at https://booktalk-rachel-chen.vercel.app (stable alias; the `booktalk-<hash>-rachel-chen` links are single deployments). Migrations 0001–0009 applied, anonymous sign-ins ON, Vercel Deployment Protection disabled by Rachel. First deploy 500ed on every route because no env vars were set in Vercel: `requireEnv` in proxy.ts threw; fixed by adding them and rebuilding without the cache. Page titles added (`title.template` "%s · BookTalk" + Open Graph description in layout.tsx). Note: Rachel's `.env.local` lines are now indented 4 spaces (harmless to Next; trim when parsing it in scripts). ⚠️ `docs/PROGRESS.md` is committed and will be public.
 It's a dev log mentioning Rachel's instructions and the Supabase project ID (not a secret).
 Ask her whether to keep it public.
 

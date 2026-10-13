@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { TryDemo } from "@/components/auth/TryDemo";
 import { AuthShell } from "@/components/auth/ui";
 import { SignupForm } from "./SignupForm";
+
+export const metadata: Metadata = { title: "Create an account" };
 
 export default function SignupPage() {
   return (

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/ui";
 import { ResetPinForm } from "./ResetPinForm";
+
+export const metadata: Metadata = { title: "Choose a new PIN" };
 
 // Reached from the reset email via /auth/confirm, which has already logged the reader in.
 export default function ResetPinPage() {

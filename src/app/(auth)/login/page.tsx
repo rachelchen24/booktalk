@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { TryDemo } from "@/components/auth/TryDemo";
 import { AuthShell } from "@/components/auth/ui";
 import { ExpiredLinkNotice } from "./ExpiredLinkNotice";
 import { LoginForm } from "./LoginForm";
+
+export const metadata: Metadata = { title: "Log in" };
 
 export default function LoginPage() {
   return (

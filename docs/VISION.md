@@ -205,5 +205,5 @@ Built step by step, with each piece explained, so every design decision can be d
 4. Find my place (chapter, page, time, %, last remembered event) — ✅ built (notes-first memory search; AI optional)
 5. Recaps (spoiler-free, notes-aware, tone matching) — ✅ built (shows your notes when no AI key is set)
 6. Notes — ✅ built (cards, editing, quick note, green dots, page/time/quote anchors, @tags with a "People & places" panel, voice notes)
-7. Deploy + README — code ✅ ("Try the demo" with anonymous accounts, daily cron, README); deploy in progress
+7. Deploy + README — ✅ live at https://booktalk-rachel-chen.vercel.app ("Try the demo", daily cron, README)
 8. v1.5: character & place lookups

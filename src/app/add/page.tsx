@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -9,6 +10,8 @@ import { looksLikeIsbn, normalizeIsbn } from "@/lib/books/isbn";
 import { authorsLabel } from "@/lib/library/format";
 import { getShelvedWorkKeys } from "@/lib/library/queries";
 import { AddButton } from "./AddButton";
+
+export const metadata: Metadata = { title: "Add a book" };
 
 export default function AddBookPage({ searchParams }: PageProps<"/add">) {
   return (

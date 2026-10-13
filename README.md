@@ -2,7 +2,7 @@
 
 **Spoiler-free recaps of what you've read so far.**
 
-**[Live demo →](https://YOUR-APP.vercel.app)** · click **Try the demo** for your own sample library, no sign-up needed.
+**[Live demo →](https://booktalk-rachel-chen.vercel.app)** · click **Try the demo** for your own sample library, no sign-up needed.
 
 ![The BookTalk library page](docs/screenshots/library.png)
 
