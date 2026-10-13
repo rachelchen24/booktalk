@@ -71,7 +71,7 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
 
       {/* 1. The two big buttons, in the spec's order. Wired up in steps 4–5. */}
       <div className="mt-8 grid grid-cols-2 gap-3">
-        <BigButton title="Recap to my spot" hint="What's happened so far" />
+        <BigButton title="Recap to my spot" hint="What's happened so far" href={`/books/${entry.id}/recap`} />
         <BigButton title="Find my place" hint="By chapter, page, time…" href={`/books/${entry.id}/find`} />
       </div>
 

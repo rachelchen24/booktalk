@@ -171,7 +171,8 @@ function ByMemory({ entryId, chapters, aiAvailable }: Props) {
             rows={2}
             maxLength={500}
             defaultValue={state.memory}
-            placeholder="Elphaba ran away with Fiyero"
+            // Generic on purpose: an example from a real book would spoil it (VISION §4.1).
+            placeholder='e.g. "Alice found out Bob was lying"'
             className={inputClass}
           />
         </label>

@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-13. Steps 1–3 done (plus extras: notes, stats, progress bars). Step 4 (Find my place) in progress._
+_Last updated: 2026-10-13. Steps 1–5 built. Next: Step 6 (rest of notes), then 7 (README/deploy)._
 
 ---
 
@@ -300,6 +300,29 @@ Tapping a chapter in the list still means "end of this chapter". **Finished = pe
 Mishaps this round (both fixed, no harm): a perl one-liner mangled `lib/chapters/list.ts`
 (repaired by hand; use the Edit tool for multi-line edits), and a stray `git stash` that did
 nothing (verified empty).
+
+### Step 5: Recaps (built 2026-10-13)
+| File | What it does |
+|---|---|
+| `src/lib/recap/scope.ts` | Pure, tested spoiler rules: `recapScope` (spot at a chapter's end → through that chapter; partway → only earlier chapters, `partwayInto` never summarized), `notesInScope`, `chaptersInScope`, `recapPromptInput` (tests assert nothing past the spot reaches the AI) |
+| `src/lib/recap/text.ts` | `cleanRecapText` / `cleanLines`: strips markdown, bullet markers and chatbot openers ("Sure! Here's your recap:") |
+| `src/lib/recap/ai.ts` | `writeShortRecap` (3–5 bullets + up to 8 characters) and `writeDetailRecap` (3–6 paragraphs). One system prompt encodes: never spoil, notes are ground truth, `confidence` + `knows_book`, match the tone of the notes, no chatbot style. `effort: "medium"`, fallbacks on |
+| `src/lib/recap/service.ts` | `loadRecapContext` (returns `null` / `"no-chapters"` / context), `fingerprint` (sha256 of level + model + the exact AI input), `getSavedRecap` (only if the fingerprint matches), `writeAndSaveRecap` |
+| `src/app/books/recap-actions.ts` | `generateRecap`, called from the browser after the page is on screen (never during prefetch) |
+| `src/components/recap/WriteRecap.tsx` | `auto` mode starts on mount (a ref guards React's dev double-run); otherwise the "More detail" button. Skeleton while writing, no typing effect |
+| `src/app/books/[id]/recap/page.tsx` | "Previously on" page: header (through chapter N; "partway into N, not included"), low-confidence notice, serif bullets, "Characters so far", "In more detail", a quiet source line, then "Your notes so far". **With no AI key it shows "From your notes" only** (Rachel's current setup) |
+| `supabase/migrations/0007_recaps.sql` | Recap cache: one row per entry+level, fingerprint, RLS (own + entry ownership). ⏳ Not applied yet; only needed once an API key is set |
+
+The book page's "Recap to my spot" BigButton now links here. ✅ Migration 0006 applied (2026-10-13).
+A recaps RLS self-test is in the scratchpad (`check-recaps.mjs`); run it after 0007 is applied.
+
+### Fixes from Rachel's Step 4 testing
+- **Spoiler in placeholder:** the "last thing I remember" example was a real *Wicked* plot
+  point and showed on every book. It's now generic, `e.g. "Alice found out Bob was lying"`.
+  New rule in VISION §4.1: **example/placeholder text is always generic, never from a real
+  book.** (Test files still use Wicked examples; tests aren't shown to readers.)
+- **"Add ___ chapters" streamlined:** the number box is now *inside* the sentence (Add [33]
+  chapters [+]) instead of a separate box next to a button that showed "___".
 
 ### Quick note box (added at Rachel's request, now permanent)
 Rachel found it odd that the book page had no notes, so a basic note box was pulled forward

@@ -31,6 +31,7 @@ Every feature should make that moment faster or more trustworthy.
 
 1. **Never spoil.** Recaps, lookups, and place-finding only ever describe the story *up to* the reader's spot. When unsure, say less.
    - Example of why this matters: describing Kiamo Ko as "where Fiyero's widow lives" would spoil *Wicked* for someone who hasn't reached that part.
+   - **Example and placeholder text in the app is always generic** (e.g. "Alice found out Bob was lying"), never from a real book. It shows on every book, so a real plot point would spoil that book for anyone reading it.
 2. **Be honest about uncertainty.** AI models know popular books well but can invent details for less popular ones. If BookTalk doesn't know a book well, it says so (e.g. "I'm not confident about this book — this recap may be inaccurate") instead of making things up. The reader's own notes are always treated as the most trustworthy source.
 3. **Short over thorough.** 3–5 bullets first; more detail on request.
 4. **Format-agnostic.** Page, timestamp, percentage, chapter, or remembered event in — the same recap out. Under the hood, every input is converted to a **chapter**.
@@ -201,7 +202,7 @@ Built step by step, with each piece explained, so every design decision can be d
 2. Library + book search / ISBN + book page layout (2 buttons, collapsed notes, rating) — ✅ plus basic notes pulled forward from step 6 (quick note box, editable cards, Shift + Enter)
 3. Editions + chapter lists (list/grid views, one-tap spot) — ✅ plus library progress bars and the "books read this year" stat
 4. Find my place (chapter, page, time, %, last remembered event) — ✅ built (notes-first memory search; AI optional)
-5. Recaps (spoiler-free, notes-aware, tone matching)
+5. Recaps (spoiler-free, notes-aware, tone matching) — ✅ built (shows your notes when no AI key is set)
 6. Notes (remaining: page/timestamp/quote anchors, @tags, optional voice note — cards, editing, quick note and green dots already exist)
 7. Deploy + README
 8. v1.5: character & place lookups

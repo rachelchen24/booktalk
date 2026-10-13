@@ -37,34 +37,42 @@ export function ChapterEditor({ entryId, initial, saveLabel = "Save chapters" }:
     <form action={action} className="space-y-4">
       <input type="hidden" name="entryId" value={entryId} />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor="chapter-count">How many chapters to add</label>
-        <input
-          id="chapter-count"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={room}
-          value={count}
-          placeholder="33"
-          onChange={(event) => setCount(event.target.value)}
-          onKeyDown={(event) => {
-            // Enter adds chapters instead of submitting the whole form.
-            if (event.key === "Enter") {
-              event.preventDefault();
-              addChapters();
-            }
-          }}
-          className="w-20 rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
-        />
-        <button
-          type="button"
-          onClick={addChapters}
-          disabled={!canAdd}
-          className="rounded-lg border border-accent px-3 py-2 text-sm font-medium text-accent hover:bg-success-surface disabled:opacity-50"
-        >
-          Add {count && canAdd ? n : "___"} {n === 1 ? "chapter" : "chapters"}
-        </button>
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Reads as one sentence, "Add [33] chapters", with the number typed into the blank. */}
+        <div className="inline-flex items-center overflow-hidden rounded-lg border border-accent bg-background focus-within:ring-2 focus-within:ring-accent/30">
+          <label htmlFor="chapter-count" className="py-2 pl-3 text-sm font-medium text-accent">
+            Add
+          </label>
+          <input
+            id="chapter-count"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={room}
+            value={count}
+            placeholder="33"
+            aria-label="Number of chapters to add"
+            onChange={(event) => setCount(event.target.value)}
+            onKeyDown={(event) => {
+              // Enter adds chapters instead of submitting the whole form.
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addChapters();
+              }
+            }}
+            className="mx-2 w-12 border-b-2 border-dashed border-accent/50 bg-transparent py-0.5 text-center font-medium tabular-nums outline-none placeholder:text-muted/60 focus:border-solid focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <span className="pr-3 text-sm font-medium text-accent">{n === 1 ? "chapter" : "chapters"}</span>
+          <button
+            type="button"
+            onClick={addChapters}
+            disabled={!canAdd}
+            aria-label={canAdd ? `Add ${n} ${n === 1 ? "chapter" : "chapters"}` : "Add chapters"}
+            className="self-stretch bg-accent px-3 text-lg leading-none text-accent-foreground hover:opacity-90 disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
         {rows.length > 0 && (
           <span className="text-sm text-muted">
             {rows.length} {rows.length === 1 ? "chapter" : "chapters"} so far

@@ -14,7 +14,7 @@ const STOP_WORDS = new Set(
   ).split(" "),
 );
 
-/** Meaningful words, lowercased: "Elphaba ran away with @Fiyero!" → ["elphaba", "ran", "away", "fiyero"]. */
+/** Meaningful words, lowercased: "Alice ran away with @Bob!" → ["alice", "ran", "away", "bob"]. */
 export function keywords(text: string): string[] {
   const words = text.toLowerCase().match(/[\p{L}\p{N}']+/gu) ?? [];
   const kept = words

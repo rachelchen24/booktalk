@@ -11,14 +11,15 @@
    ```
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
-5. **Optional: AI chapter suggestions.** Add `ANTHROPIC_API_KEY` to `.env.local` (a key from
+5. **Optional: AI (chapter suggestions, written recaps, memory search).** Add `ANTHROPIC_API_KEY` to `.env.local` (a key from
    console.anthropic.com; usage is billed per token). Without it the app works fully and
-   readers set up chapters with "Add ___ chapters". `ANTHROPIC_MODEL` picks the model
+   readers set up chapters with "Add ___ chapters" and recaps show their own notes. `ANTHROPIC_MODEL` picks the model
    (default `claude-opus-5-5`; `claude-haiku-5-5` is much cheaper).
 6. `npm install`, then `npm run dev`, then open http://localhost:3000.
 
 Migrations so far: `0001_login_attempts`, `0002_library`, `0003_notes`, `0004_chapters`,
-`0005_finished_at`, `0006_audiobook_length`. Run them in order.
+`0005_finished_at`, `0006_audiobook_length`, `0007_recaps`. Run them in order (0007 is only
+needed once an API key is set).
 
 `npm test` runs the unit tests. They don't need Supabase.
 
