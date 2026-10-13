@@ -18,7 +18,8 @@
 6. `npm install`, then `npm run dev`, then open http://localhost:3000.
 
 Migrations so far: `0001_login_attempts`, `0002_library`, `0003_notes`, `0004_chapters`,
-`0005_finished_at`, `0006_audiobook_length`, `0007_recaps`. Run them in order (0007 is only
+`0005_finished_at`, `0006_audiobook_length`, `0007_recaps`, `0008_note_anchors`. Run them in
+order (0007 is only
 needed once an API key is set).
 
 `npm test` runs the unit tests. They don't need Supabase.

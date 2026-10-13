@@ -5,11 +5,12 @@ import { AppHeader } from "@/components/AppHeader";
 import { Cover } from "@/components/books/Cover";
 import { authorsLabel, spotLabel } from "@/lib/library/format";
 import { ChapterSection } from "@/components/chapters/ChapterSection";
+import { TagsPanel } from "@/components/notes/TagsPanel";
 import { ChapterSetup } from "@/components/chapters/ChapterSetup";
 import { isAiConfigured } from "@/lib/ai/client";
 import { resolveChapters } from "@/lib/chapters/list";
 import { ensureOpenLibrarySuggestion, getSuggestions, type Suggestion } from "@/lib/chapters/suggestions";
-import type { Note } from "@/lib/library/notes";
+import { sortInChapter, type Note } from "@/lib/library/notes";
 import { getEntry, getNotes } from "@/lib/library/queries";
 import { MarkOpened } from "./MarkOpened";
 import { NotesByChapter } from "./NotesByChapter";
@@ -94,6 +95,8 @@ async function BookDetails({ params }: Pick<PageProps<"/books/[id]">, "params">)
         )}
       </section>
 
+      <TagsPanel notes={notes} chapters={chapters} />
+
       {/* 3. Final notes / rating, after the last chapter. */}
       <section className="mt-10 border-t border-border pt-8">
         <h2 className="font-serif text-lg font-semibold">When you finish</h2>
@@ -117,6 +120,9 @@ function placeNotes(notes: Note[], totalChapters: number) {
     } else {
       unplacedNotes.push(note);
     }
+  }
+  for (const chapter of Object.keys(notesByChapter)) {
+    notesByChapter[Number(chapter)] = sortInChapter(notesByChapter[Number(chapter)]);
   }
   return { notesByChapter, unplacedNotes };
 }

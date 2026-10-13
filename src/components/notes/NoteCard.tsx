@@ -3,8 +3,11 @@
 import { useActionState, useOptimistic, useState, useTransition } from "react";
 import { editNote, type NoteState } from "@/app/books/actions";
 import { MAX_NOTE_LENGTH, type Note } from "@/lib/library/notes";
+import { formatDuration } from "@/lib/place/estimate";
+import { AnchorFields } from "./AnchorFields";
 import { DeleteNoteButton } from "./DeleteNoteButton";
 import { submitOnShiftEnter } from "./keyboard";
+import { NoteAnchors, NoteText } from "./NoteText";
 
 const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
@@ -44,6 +47,11 @@ export function NoteCard({ note, pending = false }: { note: Note; pending?: bool
           }}
           className="w-full resize-y bg-transparent text-sm leading-relaxed outline-none"
         />
+        <AnchorFields
+          page={note.page ? String(note.page) : undefined}
+          time={note.audio_minutes != null ? formatDuration(note.audio_minutes) : undefined}
+          quote={note.quote ?? undefined}
+        />
         <div className="flex items-center gap-3">
           <button type="submit" className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-accent-foreground hover:opacity-90">
             Save
@@ -59,7 +67,8 @@ export function NoteCard({ note, pending = false }: { note: Note; pending?: bool
 
   return (
     <div className={`rounded-lg border border-border bg-background px-3 py-2 ${pending ? "opacity-60" : ""}`}>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed">{body}</p>
+      <NoteText body={body} />
+      <NoteAnchors note={note} />
       <div className="mt-1 flex items-center justify-between gap-3">
         <time dateTime={note.created_at} className="text-xs text-muted">
           {pending ? "Saving…" : dateFormat.format(new Date(note.created_at))}

@@ -7,7 +7,7 @@ import { getBook, getEdition } from "@/lib/books/catalog";
 import { normalizeIsbn } from "@/lib/books/isbn";
 import { isWorkKey } from "@/lib/books/open-library";
 import { MAX_FINAL_THOUGHTS } from "@/lib/library/format";
-import { MAX_CHAPTER, MAX_NOTE_LENGTH, parseChapter } from "@/lib/library/notes";
+import { MAX_CHAPTER, MAX_NOTE_LENGTH, parseAnchors, parseChapter } from "@/lib/library/notes";
 import { isUuid } from "@/lib/library/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -121,15 +121,25 @@ export async function saveReview(_prev: ActionState, formData: FormData): Promis
   return { message: "Saved." };
 }
 
-export type NoteState = ActionState & { body?: string; chapter?: string };
+export type NoteState = ActionState & { body?: string; chapter?: string; page?: string; time?: string; quote?: string };
+
+/** The optional page / audiobook time / quote fields, as typed. */
+function anchorInput(formData: FormData) {
+  return {
+    page: String(formData.get("page") ?? ""),
+    time: String(formData.get("time") ?? ""),
+    quote: String(formData.get("quote") ?? ""),
+  };
+}
 
 export async function addNote(_prev: NoteState, formData: FormData): Promise<NoteState> {
   const entryId = String(formData.get("entryId") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   const chapterInput = String(formData.get("chapter") ?? "");
   const chapter = parseChapter(chapterInput);
+  const anchorsInput = anchorInput(formData);
   // Echo the input back on errors, because React clears the form after every submit.
-  const keep = { body, chapter: chapterInput };
+  const keep = { body, chapter: chapterInput, ...anchorsInput };
 
   if (!isUuid(entryId)) return { error: "Something went wrong. Please reload the page." };
   if (!body) return { error: "Write something first.", ...keep };
@@ -137,9 +147,11 @@ export async function addNote(_prev: NoteState, formData: FormData): Promise<Not
     return { error: `Notes can be up to ${MAX_NOTE_LENGTH.toLocaleString()} characters.`, ...keep };
   }
   if (chapter === undefined) return { error: `Chapter should be a number from 1 to ${MAX_CHAPTER}.`, ...keep };
+  const anchors = parseAnchors(anchorsInput);
+  if (!anchors.ok) return { error: anchors.error, ...keep };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("notes").insert({ entry_id: entryId, chapter, body });
+  const { error } = await supabase.from("notes").insert({ entry_id: entryId, chapter, body, ...anchors.anchors });
   if (error) {
     console.error("addNote failed", error);
     return { error: "We couldn't save that note. Please try again.", ...keep };
@@ -154,17 +166,21 @@ export async function editNote(_prev: NoteState, formData: FormData): Promise<No
   const noteId = String(formData.get("noteId") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   if (!isUuid(noteId)) return { error: "Something went wrong. Please reload the page." };
-  if (!body) return { error: "A note can't be empty. Delete it instead?", body };
+  const anchorsInput = anchorInput(formData);
+  const keep = { body, ...anchorsInput };
+  if (!body) return { error: "A note can't be empty. Delete it instead?", ...keep };
   if (body.length > MAX_NOTE_LENGTH) {
-    return { error: `Notes can be up to ${MAX_NOTE_LENGTH.toLocaleString()} characters.`, body };
+    return { error: `Notes can be up to ${MAX_NOTE_LENGTH.toLocaleString()} characters.`, ...keep };
   }
+  const anchors = parseAnchors(anchorsInput);
+  if (!anchors.ok) return { error: anchors.error, ...keep };
 
   // Row-level security limits this to the reader's own notes.
   const supabase = await createClient();
-  const { error } = await supabase.from("notes").update({ body }).eq("id", noteId);
+  const { error } = await supabase.from("notes").update({ body, ...anchors.anchors }).eq("id", noteId);
   if (error) {
     console.error("editNote failed", error);
-    return { error: "We couldn't save that. Please try again.", body };
+    return { error: "We couldn't save that. Please try again.", ...keep };
   }
   refresh();
   return { message: "Saved." };

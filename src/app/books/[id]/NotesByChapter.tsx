@@ -24,7 +24,7 @@ export function NotesByChapter({ notes }: { notes: Note[] }) {
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-background/60 [&::-webkit-details-marker]:hidden">
               <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-green-600" />
-              <span className="flex-1 font-medium">{chapter === null ? "No chapter yet" : `Chapter ${chapter}`}</span>
+              <span className="flex-1 font-medium">{chapter === null ? "General notes" : `Chapter ${chapter}`}</span>
               <span className="text-sm text-muted">
                 {notes.length} {notes.length === 1 ? "note" : "notes"}
               </span>

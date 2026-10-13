@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { NoteAnchors, NoteText } from "@/components/notes/NoteText";
 import { WriteRecap } from "@/components/recap/WriteRecap";
 import { isAiConfigured } from "@/lib/ai/client";
 import { chapterName } from "@/lib/chapters/list";
@@ -165,8 +166,9 @@ function NotesSoFar({ context, primary }: { context: RecapContext; primary: bool
               </h3>
               <ul className="mt-1 space-y-1">
                 {notes.map((note) => (
-                  <li key={note.id} className="whitespace-pre-wrap font-serif leading-relaxed text-foreground/90">
-                    {note.body}
+                  <li key={note.id} className="font-serif text-foreground/90">
+                    <NoteText body={note.body} />
+                    <NoteAnchors note={note} />
                   </li>
                 ))}
               </ul>

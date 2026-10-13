@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useOptimistic, useSyncExternalStore } from "react";
+import { useActionState, useOptimistic, useState, useSyncExternalStore } from "react";
 import { addNote, type NoteState } from "@/app/books/actions";
 import { markSpot, moveNote } from "@/app/books/chapter-actions";
+import { AnchorFields } from "@/components/notes/AnchorFields";
 import { submitOnShiftEnter } from "@/components/notes/keyboard";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { chapterName, type Chapter } from "@/lib/chapters/list";
@@ -144,15 +145,29 @@ function ChapterRow({ entryId, chapter, status, notes, mark }: {
           )}
           <span aria-hidden className="shrink-0 text-muted transition-transform group-open:rotate-90">›</span>
         </summary>
-        <div className="space-y-3 pb-4 pl-13 pr-4">
-          {shownNotes.map((note) => (
-            <NoteCard key={note.id} note={note} pending={note.id.startsWith(PENDING)} />
-          ))}
-          <ChapterNoteForm entryId={entryId} chapter={chapter.number} onAdd={addPendingNote} />
+        <div className="pb-4 pl-13 pr-4">
+          <ChapterNotes entryId={entryId} chapter={chapter.number} notes={shownNotes} onAdd={addPendingNote} />
         </div>
       </details>
       <SpotButton entryId={entryId} chapter={chapter} isCurrent={status === "current"} mark={mark} />
     </li>
+  );
+}
+
+/** A chapter's notes and its "add a note" box. Shared by list rows and the grid's panel. */
+function ChapterNotes({ entryId, chapter, notes, onAdd }: {
+  entryId: string;
+  chapter: number;
+  notes: Note[];
+  onAdd: (note: Note) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {notes.map((note) => (
+        <NoteCard key={note.id} note={note} pending={note.id.startsWith(PENDING)} />
+      ))}
+      <ChapterNoteForm entryId={entryId} chapter={chapter} onAdd={onAdd} />
+    </div>
   );
 }
 
@@ -187,48 +202,100 @@ function ChapterGrid({ entryId, chapters, currentChapter, notesByChapter, mark }
   notesByChapter: Record<number, Note[]>;
   mark: MarkAction;
 }) {
+  // Tapping a box opens that chapter below the grid: its notes, a note box, and the
+  // "I've read up to here" button. Tapping it again closes it.
+  const [open, setOpen] = useState<number | null>(null);
+  const openChapter = open === null ? null : chapters[open - 1];
+
   return (
-    <>
+    <div className="space-y-4">
       <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
         {chapters.map((chapter) => {
           const status = statusOf(chapter.number, currentChapter);
           const hasNotes = (notesByChapter[chapter.number] ?? []).length > 0;
+          const isOpen = open === chapter.number;
           return (
             <li key={chapter.number}>
-              <form action={mark}>
-                <input type="hidden" name="entryId" value={entryId} />
-                <input type="hidden" name="chapter" value={chapter.number} />
-                <button
-                  type="submit"
-                  title={`${chapterName(chapter)}: tap if you've read up to here`}
-                  aria-label={`${chapterName(chapter)}${status === "current" ? ", your spot" : ""}. Mark as my spot`}
-                  className={`relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border text-lg tabular-nums transition-colors ${
-                    status === "current"
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : status === "read"
-                        ? "border-transparent bg-success-surface"
-                        : "border-border bg-surface hover:border-accent"
-                  }`}
-                >
-                  {chapter.number}
-                  {status === "current" && (
-                    <span className="absolute right-1 top-0.5">
-                      <BookmarkIcon filled small />
-                    </span>
-                  )}
-                  {hasNotes && (
-                    <span className="absolute bottom-1.5">
-                      <NoteDot />
-                    </span>
-                  )}
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : chapter.number)}
+                aria-expanded={isOpen}
+                aria-controls="grid-chapter-panel"
+                title={chapterName(chapter)}
+                aria-label={`${chapterName(chapter)}${status === "current" ? ", your spot" : ""}${hasNotes ? ", has notes" : ""}`}
+                className={`relative flex aspect-square w-full flex-col items-center justify-center rounded-lg border text-lg tabular-nums transition-colors ${
+                  status === "current"
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : status === "read"
+                      ? "border-transparent bg-success-surface"
+                      : "border-border bg-surface hover:border-accent"
+                } ${isOpen ? "ring-2 ring-accent ring-offset-2 ring-offset-background" : ""}`}
+              >
+                {chapter.number}
+                {status === "current" && (
+                  <span className="absolute right-1 top-0.5">
+                    <BookmarkIcon filled small />
+                  </span>
+                )}
+                {hasNotes && (
+                  <span className="absolute bottom-1.5">
+                    <NoteDot />
+                  </span>
+                )}
+              </button>
             </li>
           );
         })}
       </ul>
-      <p className="text-xs text-muted">Tap a chapter to mark it as your spot. Switch to the list to read and add notes.</p>
-    </>
+
+      {openChapter ? (
+        <GridChapterPanel
+          key={openChapter.number}
+          entryId={entryId}
+          chapter={openChapter}
+          isCurrent={currentChapter === openChapter.number}
+          notes={notesByChapter[openChapter.number] ?? []}
+          mark={mark}
+        />
+      ) : (
+        <p className="text-xs text-muted">Tap a chapter to see its notes or mark it as your spot.</p>
+      )}
+    </div>
+  );
+}
+
+/** The chapter opened from the grid. `key` resets it when a different chapter opens. */
+function GridChapterPanel({ entryId, chapter, isCurrent, notes, mark }: {
+  entryId: string;
+  chapter: Chapter;
+  isCurrent: boolean;
+  notes: Note[];
+  mark: MarkAction;
+}) {
+  const [shownNotes, addPendingNote] = useOptimistic(notes, (current, note: Note) => [...current, note]);
+  return (
+    <section id="grid-chapter-panel" aria-label={chapterName(chapter)} className="space-y-4 rounded-xl border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="font-medium">
+          <span className="text-muted">{chapter.number}.</span> {chapterName(chapter)}
+        </h3>
+        <form action={mark}>
+          <input type="hidden" name="entryId" value={entryId} />
+          <input type="hidden" name="chapter" value={chapter.number} />
+          <button
+            type="submit"
+            aria-pressed={isCurrent}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium ${
+              isCurrent ? "border-accent bg-accent text-accent-foreground" : "border-accent text-accent hover:bg-success-surface"
+            }`}
+          >
+            <BookmarkIcon filled={isCurrent} small />
+            {isCurrent ? "You're here" : "I've read up to here"}
+          </button>
+        </form>
+      </div>
+      <ChapterNotes entryId={entryId} chapter={chapter.number} notes={shownNotes} onAdd={addPendingNote} />
+    </section>
   );
 }
 
@@ -272,7 +339,10 @@ function ChapterNoteForm({ entryId, chapter, onAdd }: {
           Add
         </button>
       </div>
-      <p className="text-xs text-muted">Shift + Enter to save</p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-xs text-muted">Shift + Enter to save · @ to tag people and places</span>
+        <AnchorFields page={state.page} time={state.time} quote={state.quote} />
+      </div>
       {state.error && <p role="alert" className="text-sm text-danger">{state.error}</p>}
     </form>
   );
@@ -281,8 +351,8 @@ function ChapterNoteForm({ entryId, chapter, onAdd }: {
 function UnplacedNotes({ notes, chapters }: { notes: Note[]; chapters: Chapter[] }) {
   return (
     <section className="rounded-xl border border-dashed border-border p-4">
-      <h3 className="text-sm font-medium">Notes without a chapter</h3>
-      <p className="mt-0.5 text-xs text-muted">Pick a chapter for each so it shows up in the right place.</p>
+      <h3 className="text-sm font-medium">General notes</h3>
+      <p className="mt-0.5 text-xs text-muted">Notes about the whole book. If one belongs to a chapter, you can move it there.</p>
       <ul className="mt-3 space-y-3">
         {notes.map((note) => (
           <li key={note.id} className="space-y-2">

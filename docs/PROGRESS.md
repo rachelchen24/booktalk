@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-13. Steps 1–5 built. Next: Step 6 (rest of notes), then 7 (README/deploy)._
+_Last updated: 2026-10-13. Steps 1–6 built. Next: Step 7 (README + deploy; Rachel probably won't deploy, so ask), then 8 (character & place lookups)._
 
 ---
 
@@ -251,7 +251,7 @@ and 8.
 | `src/lib/chapters/suggestions.ts` | `getSuggestions`, `ensureOpenLibrarySuggestion` (automatic, free), `requestAiSuggestion` (only on click); stored via admin with `ignoreDuplicates` |
 | `src/app/books/chapter-actions.ts` | `chooseSuggestion`, `suggestWithAi`, `saveChapters` (private copy; clamps spot), `markSpot` (chapter count from the server, not the form), `moveNote`, `saveEdition` |
 | `src/components/chapters/ChapterEditor.tsx` | **"Add ___ chapters" button** (Rachel's request): type 33 → Chapter 1…33 rows with optional titles; remove rows; save |
-| `src/components/chapters/ChapterSection.tsx` | List/grid toggle (remembered with `useSyncExternalStore` + localStorage); list rows = `<details>` with notes + per-chapter note form + bookmark spot button; grid tap = mark spot; read chapters tinted; "Notes without a chapter" with Move-to-chapter |
+| `src/components/chapters/ChapterSection.tsx` | List/grid toggle (remembered with `useSyncExternalStore` + localStorage); list rows = `<details>` with notes + per-chapter note form + bookmark spot button; grid tap = **open the chapter below the grid** (`GridChapterPanel`: its notes, note box, "I've read up to here"), changed at Rachel's request; list and grid share `ChapterNotes`; read chapters tinted; **"General notes"** (renamed from "Notes without a chapter" at Rachel's request) with Move-to-chapter |
 | `src/components/chapters/ChapterSetup.tsx`, `AiSuggestButton.tsx`, `EditionForm.tsx` | Setup panel when no chapters; edition form |
 | `src/app/books/[id]/chapters/page.tsx` | "Chapters & edition" page (`?from=<suggestionId>` starts from a suggestion) |
 
@@ -292,6 +292,14 @@ Not built in Step 3 (deferred): physical dimensions (best-effort in spec), and p
 | `src/app/books/[id]/find/page.tsx` | The page; the book page's "Find my place" BigButton now links here (Recap is still disabled until Step 5) |
 | `supabase/migrations/0006_audiobook_length.sql` | `library_entries.audiobook_minutes` |
 
+**Rachel's rule (2026-10-13): % = real position when known.** Page → page ÷ total pages, audiobook →
+time ÷ total length, for *every* chapter option (not chapter-based % for the neighbours).
+`Candidates` shows "You're 47% through the book (page 212 of 448). Which chapter is that?" once,
+and every row saves `estimate.percent`. Memory results still show and save chapter-based %.
+Knock-on change in `recapScope`: "at the end of a chapter" now means the % **equals**
+`percentThrough(chapter)` (what tapping saves), or ≥100. It used to mean "≥ end of chapter",
+which would misfire with real page % (chapter lengths vary) and could recap an unfinished
+chapter. Tested.
 **Spot semantics changed:** a spot can now be partway through a chapter ("Chapter 13 · 40%").
 `current_chapter` = the chapter you've reached; `current_percent` = how far through the book.
 Tapping a chapter in the list still means "end of this chapter". **Finished = percent ≥ 100**
@@ -300,6 +308,20 @@ Tapping a chapter in the list still means "end of this chapter". **Finished = pe
 Mishaps this round (both fixed, no harm): a perl one-liner mangled `lib/chapters/list.ts`
 (repaired by hand; use the Edit tool for multi-line edits), and a stray `git stash` that did
 nothing (verified empty).
+
+### Step 6: The rest of notes (built 2026-10-13, waiting on migration 0008)
+| File | What it does |
+|---|---|
+| `supabase/migrations/0008_note_anchors.sql` | `notes.page`, `notes.audio_minutes`, `notes.quote` (≤300). ⏳ Rachel must run it; book pages error until she does (getNotes selects these columns) |
+| `src/lib/library/notes.ts` | `Note` gains optional `page` / `audio_minutes` / `quote`; `sortInChapter` (page order like margin notes, then page-less oldest first); `parseAnchors` (validates the three fields; time uses `parseDuration`) |
+| `src/lib/library/tags.ts` | `splitTags` / `extractTags` / `summarizeTags` / `mentionsTag` / `tagKey`. `@Alice`; multi-word names continue through capitalized words (`@Kiamo Ko`); stops at punctuation or a lowercase word; ignores emails; case-insensitive; drops possessives. **Not stored**: read from note text |
+| `src/components/notes/AnchorFields.tsx` | Collapsed "+ Page, time or quote" fields (open if any are filled in). Used in QuickNoteBox, the chapter note form, and NoteCard edit |
+| `src/components/notes/NoteText.tsx` | `NoteText` (tags highlighted), `NoteAnchors` ("p. 212 · 3h 42m · “quote…”"). Used in NoteCard, TagsPanel, recap notes |
+| `src/components/notes/VoiceNoteButton.tsx` | Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`); support read via `useSyncExternalStore`; Firefox gets the spec's message; transcript is appended to the quick note box for editing before save. Chrome sends audio to Google's speech service (noted in the code comment) |
+| `src/components/notes/TagsPanel.tsx` | "People & places" on the book page: tag chips with counts → notes mentioning the tag, with chapter names |
+
+`addNote` / `editNote` accept and echo the anchors. Not built: a standalone "stopped here" button
+(the one-tap chapter bookmark covers it; a button with no chapter wouldn't know where you stopped).
 
 ### Step 5: Recaps (built 2026-10-13)
 | File | What it does |

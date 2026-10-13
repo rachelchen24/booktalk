@@ -34,6 +34,16 @@ describe("recapScope", () => {
     expect(recapScope(1, 33.29, 3)).toEqual({ through: 1, partwayInto: null });
   });
 
+  it("treats a page- or time-based spot as partway, even past the equal-chapters boundary", () => {
+    // Page 210 of 448 = 46.9%. The reader picked chapter 13. With equal-length chapters,
+    // chapter 13 would end at 43.3%, but real chapters vary, so they may still be mid-chapter.
+    expect(recapScope(13, 46.9, 30)).toEqual({ through: 12, partwayInto: 13 });
+  });
+
+  it("recaps the whole book at 100%, however it was found", () => {
+    expect(recapScope(30, 100, 30)).toEqual({ through: 30, partwayInto: null });
+  });
+
   it("never goes past the end of the list", () => {
     expect(recapScope(40, 100, 30)).toEqual({ through: 30, partwayInto: null });
   });

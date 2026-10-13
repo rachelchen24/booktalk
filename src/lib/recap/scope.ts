@@ -13,9 +13,16 @@ export type RecapScope = {
 };
 
 /**
- * A spot at the end of a chapter (tapped in the list) recaps through that chapter.
- * A spot partway through (found by page or time) recaps only the chapters before it:
- * we don't know how much of that chapter they've read, so we say less.
+ * A spot at the end of a chapter (tapped in the list, or picked by chapter) recaps
+ * through that chapter. A spot found by page, audiobook time or percentage is partway
+ * through its chapter, so the recap covers only the chapters before it: we don't know
+ * how much of that chapter they've read, so we say less.
+ *
+ * Tapping a chapter saves exactly percentThrough(chapter), so that's the "end of
+ * chapter" signal. Page and time spots save the reader's real position
+ * (current ÷ total), which almost never lands on that exact value. Comparing with
+ * "≥ end of chapter" instead would be wrong: chapter lengths vary, so a real page
+ * percentage can pass the equal-chapters boundary while the reader is still mid-chapter.
  */
 export function recapScope(
   currentChapter: number | null,
@@ -26,7 +33,7 @@ export function recapScope(
   const chapter = Math.min(currentChapter, totalChapters);
   const endOfChapter = percentThrough(chapter, totalChapters);
   // A small tolerance for rounding: percentThrough rounds to one decimal place.
-  const atEnd = currentPercent === null || currentPercent >= endOfChapter - 0.05;
+  const atEnd = currentPercent === null || currentPercent >= 100 || Math.abs(currentPercent - endOfChapter) < 0.05;
   return atEnd ? { through: chapter, partwayInto: null } : { through: chapter - 1, partwayInto: chapter };
 }
 

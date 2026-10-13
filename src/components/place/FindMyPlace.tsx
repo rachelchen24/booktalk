@@ -107,7 +107,13 @@ function ByPage({ entryId, chapters, totalPages, calibration }: Props) {
       {page && total && !valid && <p className="text-sm text-danger">That page is past the end of the book.</p>}
       <EstimateNote calibrated={Boolean(calibration)} />
       {estimate && (
-        <Candidates entryId={entryId} chapters={chapters} estimate={estimate} extra={{ totalPages: String(totalN) }} />
+        <Candidates
+          entryId={entryId}
+          chapters={chapters}
+          estimate={estimate}
+          position={`page ${pageN} of ${totalN}`}
+          extra={{ totalPages: String(totalN) }}
+        />
       )}
     </div>
   );
@@ -139,7 +145,13 @@ function ByTime({ entryId, chapters, audiobookMinutes }: Props) {
       )}
       <EstimateNote />
       {estimate && lengthN !== null && (
-        <Candidates entryId={entryId} chapters={chapters} estimate={estimate} extra={{ audiobookMinutes: String(lengthN) }} />
+        <Candidates
+          entryId={entryId}
+          chapters={chapters}
+          estimate={estimate}
+          position={`${formatDuration(timeN!)} of ${formatDuration(lengthN)}`}
+          extra={{ audiobookMinutes: String(lengthN) }}
+        />
       )}
     </div>
   );
@@ -199,6 +211,7 @@ function ByMemory({ entryId, chapters, aiAvailable }: Props) {
                 chapter={chapters[n - 1]}
                 percent={percentThrough(n, chapters.length)}
                 best={i === 0}
+                showPercent
               />
             ))}
           </ul>
@@ -208,44 +221,60 @@ function ByMemory({ entryId, chapters, aiAvailable }: Props) {
   );
 }
 
-/** Best guess plus its neighbours. Only number, title and % are shown: nothing that could spoil. */
-function Candidates({ entryId, chapters, estimate, extra }: {
+/**
+ * Best guess plus its neighbours. Your position (current ÷ total) is known exactly, so
+ * every option saves that same %; only the chapter is a guess. Only number and title
+ * are shown for each: nothing that could spoil.
+ */
+function Candidates({ entryId, chapters, estimate, position, extra }: {
   entryId: string;
   chapters: Chapter[];
   estimate: Estimate;
+  /** e.g. "page 212 of 448" */
+  position?: string;
   extra?: Record<string, string>;
 }) {
   return (
-    <ul className="space-y-2">
-      {estimate.candidates.map((n) => (
-        <CandidateRow
-          key={n}
-          entryId={entryId}
-          chapter={chapters[n - 1]}
-          percent={n === estimate.chapter ? estimate.percent : percentThrough(n, chapters.length)}
-          best={n === estimate.chapter}
-          extra={extra}
-        />
-      ))}
-    </ul>
+    <div className="space-y-2">
+      <p className="text-sm">
+        You&apos;re <strong className="font-semibold">{formatPercent(estimate.percent)}</strong> through the book
+        {position ? ` (${position})` : ""}. Which chapter is that?
+      </p>
+      <ul className="space-y-2">
+        {estimate.candidates.map((n) => (
+          <CandidateRow
+            key={n}
+            entryId={entryId}
+            chapter={chapters[n - 1]}
+            percent={estimate.percent}
+            best={n === estimate.chapter}
+            extra={extra}
+          />
+        ))}
+      </ul>
+    </div>
   );
 }
 
-function CandidateRow({ entryId, chapter, percent, best, extra }: {
+function CandidateRow({ entryId, chapter, percent, best, showPercent = false, extra }: {
   entryId: string;
   chapter: Chapter;
+  /** What gets saved as the reader's position. */
   percent: number;
   best: boolean;
+  /** Memory results show each chapter's own position; page/time/% show it once above. */
+  showPercent?: boolean;
   extra?: Record<string, string>;
 }) {
+  const note = [showPercent ? `about ${formatPercent(percent)} through the book` : null, best ? "most likely" : null]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <li className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${best ? "border-accent bg-success-surface/60" : "border-border"}`}>
       <span className="w-8 shrink-0 text-right tabular-nums text-muted">{chapter.number}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate">{chapterName(chapter)}</span>
-        <span className="text-xs text-muted">
-          {Math.round(percent)}% through the book{best ? " · most likely" : ""}
-        </span>
+        {note && <span className="text-xs text-muted">{note}</span>}
       </span>
       <SaveSpot entryId={entryId} chapter={chapter.number} percent={percent} extra={extra} compact />
     </li>
@@ -328,3 +357,8 @@ const inputClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30";
 const primaryButton =
   "rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:opacity-60";
+
+/** 46.9 → "47%"; keeps one decimal below 1% so a just-started book doesn't read "0%". */
+function formatPercent(percent: number): string {
+  return percent > 0 && percent < 1 ? `${percent.toFixed(1)}%` : `${Math.round(percent)}%`;
+}

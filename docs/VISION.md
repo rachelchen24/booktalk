@@ -99,7 +99,7 @@ BookTalk uses this to find the right edition (or the closest match) and map page
 - **Marking your spot is one tap** on a chapter.
 - **Two views, toggleable:**
   - **List** of chapters.
-  - **Grid of chapter boxes** across the screen, clickable.
+  - **Grid of chapter boxes** across the screen, clickable. Tapping a box opens that chapter below the grid: its notes, a note box, and an "I've read up to here" button. (The list's bookmark stays the one-tap way to mark your spot.)
 - Chapter boxes/rows show: the reader's current spot, chapters already read, and a **green dot** if the chapter has notes.
 
 ### 5.5 Find my place by…
@@ -108,7 +108,8 @@ A clear "**Find my place by:**" selector with these options:
 - **Page number** — mapped to a chapter using the edition (5.3).
 - **Audiobook time** — hours and minutes (e.g. 3h 42m). Estimated from the audiobook's total length (asked once, then remembered). *Later:* real chapter timings from Audnexus for Audible titles, which needs the book's Audible ID (ASIN).
 - **Page, time and % results are estimates** (chapters vary in length), so BookTalk shows its best guess plus the chapters on either side, and the reader taps the right one. A "chapter X starts on page Y" reference point from the edition (5.3) makes page estimates more accurate.
-- A spot can be partway through a chapter (e.g. "Chapter 13 · 40%"). A book counts as finished at 100%.
+- A spot can be partway through a chapter (e.g. "Chapter 13 · 47%"). A book counts as finished at 100%.
+- **The % is always the reader's real position when it's known:** by page it's current page ÷ total pages, by audiobook it's current time ÷ total length. Only the *chapter* is estimated. Tapping a chapter (no page or time given) uses chapter ÷ total chapters.
 - **Percentage** through the book.
 - **Last remembered event** — the reader types the last thing they remember, e.g. *"Elphaba ran away with Fiyero."*
   - BookTalk returns **several possible spots**, each showing **only**:
@@ -134,7 +135,7 @@ A clear "**Find my place by:**" selector with these options:
 ### 5.7 Notes
 Not one big text box for the whole book — each note is its own small card, attached to a spot.
 - **Notes are editable and deletable** in place, wherever they're shown.
-- **Two ways to add a note:** a **quick note box** at the top of the book page (chapter optional, the fastest way to jot something when you stop), and an "add a note" box inside each chapter. Notes saved without a chapter appear under "Notes without a chapter" with a "Move to chapter" option.
+- **Two ways to add a note:** a **quick note box** at the top of the book page (chapter optional, the fastest way to jot something when you stop), and an "add a note" box inside each chapter. Notes saved without a chapter are **general notes** (about the whole book), shown under "General notes" with a "Move to chapter" option.
 - **Shift + Enter saves** a note in any note box; plain Enter makes a new line.
 - Short notes like *"Character A killed Character B."*
 - Anchored to a **chapter** (required) plus optional:
@@ -203,6 +204,6 @@ Built step by step, with each piece explained, so every design decision can be d
 3. Editions + chapter lists (list/grid views, one-tap spot) — ✅ plus library progress bars and the "books read this year" stat
 4. Find my place (chapter, page, time, %, last remembered event) — ✅ built (notes-first memory search; AI optional)
 5. Recaps (spoiler-free, notes-aware, tone matching) — ✅ built (shows your notes when no AI key is set)
-6. Notes (remaining: page/timestamp/quote anchors, @tags, optional voice note — cards, editing, quick note and green dots already exist)
+6. Notes — ✅ built (cards, editing, quick note, green dots, page/time/quote anchors, @tags with a "People & places" panel, voice notes)
 7. Deploy + README
 8. v1.5: character & place lookups
