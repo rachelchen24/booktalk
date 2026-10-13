@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireEnv } from "@/lib/env";
 import { LOCKOUT_MINUTES, MAX_FAILED_ATTEMPTS, lockedMessage, lockMinutesRemaining } from "@/lib/auth/lockout";
 import { isValidPin, normalizeEmail, pinToPassword } from "@/lib/auth/pin";
+import { seedDemoLibrary } from "@/lib/demo/seed";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -176,6 +177,36 @@ export async function resetPin(_prev: FormState, formData: FormData): Promise<Fo
   }
 
   // No lockout clearing needed here: the reset link already lifted it in /auth/confirm.
+  redirect("/");
+}
+
+/**
+ * "Try the demo": a one-click private account with a sample library, so visitors (like
+ * recruiters) can use the app without an email or PIN. It's a Supabase anonymous
+ * account, so every visitor gets their own library and can't touch anyone else's, and
+ * row-level security works exactly as for real readers. Demo accounts are deleted after
+ * a week (see /api/cron/daily).
+ */
+export async function startDemo(): Promise<FormState> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    console.error("signInAnonymously failed", error);
+    return {
+      error:
+        error.code === "over_request_rate_limit"
+          ? "Lots of people are trying the demo right now. Please try again in a few minutes."
+          : "The demo isn't available right now. Please try again later.",
+    };
+  }
+
+  try {
+    // Same client, now signed in as the new demo account.
+    await seedDemoLibrary(supabase);
+  } catch (seedError) {
+    // An empty library still works; it's just less to look at.
+    console.error("Seeding the demo library failed", seedError);
+  }
   redirect("/");
 }
 

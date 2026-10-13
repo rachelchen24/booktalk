@@ -1,7 +1,7 @@
 import "server-only";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { AI_MODEL, aiClient, isAiConfigured, logAiError } from "@/lib/ai/client";
+import { AI_MODEL, aiClient, fallbackParams, isAiConfigured, logAiError } from "@/lib/ai/client";
 import { parseChapters, type Chapter } from "./list";
 
 /**
@@ -51,9 +51,8 @@ export async function suggestChaptersWithAi(book: BookForAi): Promise<Chapter[] 
       messages: [{ role: "user", content: `List the chapters of this book.\n\n${description}` }],
       // A lookup, not a hard reasoning task.
       output_config: { effort: "low", format: betaZodOutputFormat(ChapterListSchema) },
-      // If a safety classifier declines, retry on a fallback model instead of failing.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      // If a safety classifier declines, retry on a fallback model (where the model supports it).
+      ...fallbackParams(),
     });
 
     if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") return null;

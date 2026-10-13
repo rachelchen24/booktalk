@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-13. Steps 1–6 built. Next: Step 7 (README + deploy; Rachel probably won't deploy, so ask), then 8 (character & place lookups)._
+_Last updated: 2026-10-13. Steps 1–6 built; Step 7 code done, Rachel is deploying. Then Step 8 (character & place lookups)._
 
 ---
 
@@ -308,6 +308,27 @@ Tapping a chapter in the list still means "end of this chapter". **Finished = pe
 Mishaps this round (both fixed, no harm): a perl one-liner mangled `lib/chapters/list.ts`
 (repaired by hand; use the Edit tool for multi-line edits), and a stray `git stash` that did
 nothing (verified empty).
+
+### Step 7: README + deploy (code done 2026-10-13; Rachel deploying)
+Rachel's decisions: **deploy publicly** for recruiters; **"Try the demo"** button (anonymous
+Supabase accounts with a seeded sample library); **AI on, with a spend cap**, model
+`claude-haiku-5-5` via `ANTHROPIC_MODEL`.
+| File | What it does |
+|---|---|
+| `src/lib/ai/client.ts` → `fallbackParams()` | `fallbacks: "default"` + beta header **only** for models that support it (opus-5-5, opus-5, fable-5-1, sonnet-5-5). **Haiku 5.5 has no server-side fallback** (the default form does nothing; the array form returns a 400), so all three AI modules spread this instead of hardcoding it |
+| `src/lib/demo/seed.ts` | `seedDemoLibrary(client)`: Alice (OL138052W; 12 real chapter titles; spot = end of ch 6; 6 chapter notes with @tags/page/quote + 1 general note) and Oz (OL18417W; 24 numbered chapters; finished 3 days ago; 5★; final thoughts). Catalog rows via admin, everything else as the demo user |
+| `src/app/(auth)/actions.ts` → `startDemo()` | `signInAnonymously()` → seed (failure is logged, not fatal) → `/` |
+| `src/components/auth/TryDemo.tsx` | "Just looking around? Try the demo" box under the login and signup cards (`AuthShell` gained `aside` and a tagline) |
+| `src/lib/auth/current-user.ts` | `CurrentUser` gains `email: string \| null` and `isDemo` (from `claims.is_anonymous`). The header shows a "Demo" badge + "Leave demo" |
+| `supabase/migrations/0009_demo_cleanup.sql` | `delete_stale_demo_users(p_days)`: security definer, deletes anonymous auth.users older than N days (cascades); execute revoked from public/anon/authenticated, granted to service_role |
+| `src/app/api/cron/daily/route.ts` + `vercel.json` | Daily 09:00 UTC: requires `Bearer CRON_SECRET`; pings `books` (keeps the free project awake) + runs the cleanup. `/api/cron` added to `PUBLIC` in proxy.ts |
+| `README.md` | Recruiter-facing: live demo link (placeholder `YOUR-APP`), why, features, stack, design decisions, run locally. Screenshots expected at `docs/screenshots/{library,book,find,recap}.png` |
+| `docs/SETUP.md` → "Deploying (Vercel)" | Click-by-click checklist |
+
+Status when written: 0008 ✅; **0007 and 0009 not applied; anonymous sign-ins OFF**; no
+GitHub remote; `gh` CLI not installed. ⚠️ `docs/PROGRESS.md` is committed and will be public.
+It's a dev log mentioning Rachel's instructions and the Supabase project ID (not a secret).
+Ask her whether to keep it public.
 
 ### Step 6: The rest of notes (built 2026-10-13, waiting on migration 0008)
 | File | What it does |

@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export type CurrentUser = { id: string; email: string };
+export type CurrentUser = {
+  id: string;
+  /** Null for demo accounts, which have no email. */
+  email: string | null;
+  /** A "Try the demo" visitor: an anonymous Supabase account with its own sample library. */
+  isDemo: boolean;
+};
 
 /**
  * The one place pages ask "who is logged in?". Sends logged-out readers to /login.
@@ -20,6 +26,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
-  if (!claims?.sub || typeof claims.email !== "string") redirect("/login");
-  return { id: claims.sub, email: claims.email };
+  if (!claims?.sub) redirect("/login");
+
+  const isDemo = claims.is_anonymous === true;
+  const email = typeof claims.email === "string" && claims.email ? claims.email : null;
+  if (!isDemo && !email) redirect("/login");
+  return { id: claims.sub, email, isDemo };
 });

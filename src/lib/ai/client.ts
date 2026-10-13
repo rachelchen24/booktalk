@@ -10,6 +10,18 @@ import Anthropic from "@anthropic-ai/sdk";
  */
 export const AI_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 
+// Models that support server-side fallbacks (a declined request is retried on another
+// model). Claude Haiku 5.5 has none: sending `fallbacks` there does nothing, or fails
+// the request outright, so it's only added for models that support it.
+const MODELS_WITH_FALLBACKS = new Set(["claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "claude-sonnet-5-5"]);
+
+/** Spread into a `beta.messages` request: fallback settings when the model supports them. */
+export function fallbackParams(): { betas?: ["server-side-fallback-2026-07-01"]; fallbacks?: "default" } {
+  return MODELS_WITH_FALLBACKS.has(AI_MODEL)
+    ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" }
+    : {};
+}
+
 export function isAiConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }

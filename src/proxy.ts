@@ -4,8 +4,8 @@ import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 /** Pages a logged-out reader can visit. Logged-in readers are sent home from these. */
 const GUEST_ONLY = ["/login", "/signup", "/forgot-pin"];
-/** Pages anyone can visit (email-link landing). */
-const PUBLIC = ["/auth/confirm"];
+/** Paths anyone can reach: email-link landing, and the cron job (which checks its own secret). */
+const PUBLIC = ["/auth/confirm", "/api/cron"];
 
 /**
  * Runs before every page request. Two jobs:

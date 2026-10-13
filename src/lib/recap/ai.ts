@@ -1,7 +1,7 @@
 import "server-only";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { AI_MODEL, aiClient, isAiConfigured, logAiError } from "@/lib/ai/client";
+import { AI_MODEL, aiClient, fallbackParams, isAiConfigured, logAiError } from "@/lib/ai/client";
 import { cleanLines, cleanRecapText } from "./text";
 
 /**
@@ -80,8 +80,8 @@ async function ask<T extends z.ZodType>(promptInput: string, task: string, schem
       messages: [{ role: "user", content: `${promptInput}\n\n${task}` }],
       // Recaps are the product: worth more care than a lookup.
       output_config: { effort: "medium", format: betaZodOutputFormat(schema) },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      // If a safety classifier declines, retry on a fallback model (where the model supports it).
+      ...fallbackParams(),
     });
     if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") return null;
     return (response.parsed_output as z.infer<T> | null) ?? null;

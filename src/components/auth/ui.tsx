@@ -2,23 +2,27 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { FormState } from "@/app/(auth)/actions";
 
-export function AuthShell({ title, subtitle, children, footer }: {
+export function AuthShell({ title, subtitle, children, footer, aside }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Shown below everything, e.g. the "Try the demo" box. */
+  aside?: ReactNode;
 }) {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-      <Link href="/" className="mb-8 font-serif text-2xl font-semibold tracking-tight">
+      <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
         BookTalk
       </Link>
+      <p className="mb-8 mt-1 text-center text-sm text-muted">Spoiler-free recaps of what you&apos;ve read so far.</p>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
         <h1 className="font-serif text-xl font-semibold">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
         <div className="mt-6">{children}</div>
       </div>
       {footer && <div className="mt-6 text-sm text-muted">{footer}</div>}
+      {aside && <div className="mt-6 flex w-full justify-center">{aside}</div>}
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { TryDemo } from "@/components/auth/TryDemo";
 import { AuthShell } from "@/components/auth/ui";
 import { ExpiredLinkNotice } from "./ExpiredLinkNotice";
 import { LoginForm } from "./LoginForm";
@@ -9,6 +10,7 @@ export default function LoginPage() {
     <AuthShell
       title="Welcome back"
       subtitle="Pick up right where you left off."
+      aside={<TryDemo />}
       footer={
         <>
           New here?{" "}

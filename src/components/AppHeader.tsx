@@ -21,9 +21,17 @@ async function AccountMenu() {
   const user = await getCurrentUser();
   return (
     <form action={logOut} className="flex items-center gap-3 text-sm">
-      <span className="hidden text-muted sm:inline">{user.email}</span>
-      <button type="submit" className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface">
-        Log out
+      {user.isDemo ? (
+        <span className="rounded-full bg-success-surface px-2.5 py-0.5 text-xs font-medium text-accent">Demo</span>
+      ) : (
+        <span className="hidden text-muted sm:inline">{user.email}</span>
+      )}
+      <button
+        type="submit"
+        title={user.isDemo ? "Your demo library is deleted after a week" : undefined}
+        className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface"
+      >
+        {user.isDemo ? "Leave demo" : "Log out"}
       </button>
     </form>
   );
