@@ -3,7 +3,7 @@
 Read this first when you pick the project back up. **[VISION.md](VISION.md) is still the spec and
 wins over anything here.** This file records how we're working, what's built, and what's next.
 
-_Last updated: 2026-10-12, end of Step 1._
+_Last updated: 2026-10-13, Step 2 built and waiting on migration 0002 + testing (see "Step 2" below)._
 
 ---
 
@@ -15,6 +15,9 @@ _Last updated: 2026-10-12, end of Step 1._
 - **Ask before starting the next build step.**
 - Save finished files made *for Rachel* (PDFs, exports) to `C:\Users\rache\Downloads`, and don't
   overwrite files there. Project files stay in the repo.
+- **Rachel commits by hand.** Never run `git commit`; tell her what's ready and suggest how to
+  split the commits.
+- **Never send Rachel's email address to outside services** (e.g. in a User-Agent header).
 
 ## Spec in brief (full version: VISION.md)
 
@@ -189,15 +192,41 @@ clicking any of them proves the reader owns the email.
 
 ---
 
-## Next: Step 2 (ask Rachel before starting)
+## Step 2: Library + search/ISBN + book page (built, being tested)
 
-Library + book search/ISBN + book page layout (VISION §5.2, §5.2a):
-- DB tables and row-level security: books (shared, from Open Library), the reader's library
-  entries (last read at, current spot), and later notes/ratings.
-- Open Library search by title/author and ISBN lookup, with covers.
-- Home = library sorted by most recently read, each book showing chapter + %.
-- Book page: **Recap to my spot** and **Find my place** buttons (placeholders until Steps 4–5),
-  notes collapsed by chapter with green dots, rating and final thoughts at the end.
+Rachel's decisions: "most recently read" = most recently **opened** (or added). Covers are in.
+She added VISION principle 6, **"Feels like a book, not a chatbot"**, which governs Steps 4–5
+and 8.
+
+### File map
+| File | What it does |
+|---|---|
+| `supabase/migrations/0002_library.sql` | `books` (shared catalog; readers can only SELECT, writes go through the service role) + `library_entries` (per reader: spot, rating, final thoughts, isbn/edition cover, `last_opened_at`; per-owner RLS using the `(select auth.uid())` pattern; unique `(user_id, book_id)`) |
+| `src/lib/books/isbn.ts` | `normalizeIsbn` (ISBN-10/13 check digits), `looksLikeIsbn` |
+| `src/lib/books/open-library.ts` | Pure: types, URL builders, `toBookResults`, `toEdition`, `isWorkKey`, `coverUrl` |
+| `src/lib/books/catalog.ts` | Server fetchers with `"use cache"` + `cacheLife`: `searchBooks`, `getBook`, `getEdition`. They throw `OpenLibraryError` so failures aren't cached. User-Agent is `BookTalk/0.1 (portfolio project)`. |
+| `src/lib/library/queries.ts` | `getLibrary`, `getEntry`, `getShelvedWorkKeys`, `isUuid` (as the reader, so RLS applies) |
+| `src/lib/library/format.ts` | `spotLabel`, `authorsLabel`, `MAX_FINAL_THOUGHTS` (client-safe) |
+| `src/app/books/actions.ts` | `addBook` (re-fetches from Open Library, upserts the catalog with admin and the entry as the reader), `markOpened`, `saveReview`, `removeBook` |
+| `src/app/page.tsx` | Library: big "Pick up where you left off" card for the most recent book, then an "Also on your shelf" grid |
+| `src/app/add/` | Search page (`next/form`, query in the URL `?q=`), `AddButton` |
+| `src/app/books/[id]/` | Book page: cover/title/spot → 2 big buttons (disabled placeholders) → notes-by-chapter empty state → "When you finish" (stars + final thoughts) → remove. `MarkOpened` calls the action from `useEffect` so prefetches don't count as opens. |
+| `src/components/AppHeader.tsx`, `src/components/books/Cover.tsx` | Shared header; cover with `unoptimized` next/image (Open Library serves sizes already) and a no-cover placeholder |
+
+### Findings worth mentioning in interviews
+- Open Library data is crowd-sourced. A made-up ISBN with a valid check digit (9780000000002)
+  turned out to be attached to two different junk records. That's why the reader confirms
+  editions and chapters (Step 3).
+- Unknown ISBNs redirect to an HTML page instead of returning a 404. `getJson` handles that
+  with `allowMissing`.
+- "use server" files can only export async functions, so constants live in `lib/library/format.ts`.
+
+### Status
+- ✅ tsc, lint, 41 tests, and `next build` pass.
+- ⏳ Rachel needs to run `0002_library.sql` in the dashboard SQL Editor. Then run the
+  no-email RLS self-test (a scratchpad script: creates 2 confirmed users via the admin API,
+  checks catalog write-protection, shelf isolation, upsert dedupe, rating check, then cleans up),
+  then a manual UI test.
 
 Open questions for Rachel:
 1. (Answered: Step 1 is committed.)
