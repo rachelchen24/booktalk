@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Warm "paper" palette. The accent green echoes the green note dots planned for chapters. */
+:root {
+  --background: #faf7f2;
+  --surface: #ffffff;
+  --foreground: #1f1b16;
+  --muted: #6b6259;
+  --border: #e6dfd4;
+  --accent: #2f6b55;
+  --accent-foreground: #ffffff;
+  --danger: #a3362a;
+  --danger-surface: #fbece9;
+  --success-surface: #e8f3ee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #171512;
+    --surface: #211e1a;
+    --foreground: #f1ece4;
+    --muted: #a89f94;
+    --border: #3a342d;
+    --accent: #6fbf9d;
+    --accent-foreground: #10201a;
+    --danger: #f08a7c;
+    --danger-surface: #3a1f1b;
+    --success-surface: #1c2f27;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+  --color-success-surface: var(--success-surface);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-literata);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
